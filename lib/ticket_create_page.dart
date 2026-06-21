@@ -428,9 +428,20 @@ class _TicketCreatePageState extends State<TicketCreatePage> {
         );
       } catch (_) {}
 
-      final pdfDoc = await generateTicketPdf(
-        Map<String, dynamic>.from(fullTicket),
-      );
+final branchSettings = await _supabase
+    .from('branch_settings')
+    .select()
+    .eq('branch_code', branchCode!.trim().toUpperCase())
+    .maybeSingle();
+
+print('Branch Code = ${branchCode!.trim().toUpperCase()}');
+print('Branch Settings = $branchSettings');
+
+fullTicket['branch_settings'] = branchSettings;
+
+final pdfDoc = await generateTicketPdf(
+  Map<String, dynamic>.from(fullTicket),
+);
       await Printing.layoutPdf(onLayout: (_) async => pdfDoc.save());
 
       _toast('Ticket created: $ticketNo');
