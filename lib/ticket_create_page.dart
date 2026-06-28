@@ -439,6 +439,10 @@ print('Branch Settings = $branchSettings');
 
 fullTicket['branch_settings'] = branchSettings;
 
+
+fullTicket['created_at'] = insertedTicket['created_at'];
+fullTicket['ticket_date'] = insertedTicket['created_at'];
+
 final pdfDoc = await generateTicketPdf(
   Map<String, dynamic>.from(fullTicket),
 );

@@ -29,27 +29,34 @@ Future<pw.Document> generateTicketPdf(Map<String, dynamic> ticket) async {
   }
 
   DateTime dt() {
-  final raw = (ticket['ticket_date'] ?? ticket['created_at'] ?? '').toString();
+  final rawCreated = (ticket['created_at'] ?? '').toString();
 
-  if (raw.isEmpty) {
-    return DateTime.now();
+  if (rawCreated.isNotEmpty) {
+    return DateTime.parse(rawCreated).toLocal();
   }
 
-  return DateTime.tryParse(raw)?.toLocal() ?? DateTime.now();
+  return DateTime.now();
 }
 
-  String dateText() {
-    final d = dt();
-    return '${d.day.toString().padLeft(2, '0')}-${d.month.toString().padLeft(2, '0')}-${d.year}';
-  }
+String dateText() {
+  final d = dt();
+  return '${d.day.toString().padLeft(2, '0')}-'
+      '${d.month.toString().padLeft(2, '0')}-'
+      '${d.year}';
+}
 
-  String timeText() {
-    final d = dt();
-    final h = d.hour > 12 ? d.hour - 12 : (d.hour == 0 ? 12 : d.hour);
-    final m = d.minute.toString().padLeft(2, '0');
-    final ap = d.hour >= 12 ? 'PM' : 'AM';
-    return '$h:$m $ap';
-  }
+String timeText() {
+  final d = dt();
+
+  int h = d.hour;
+  final m = d.minute.toString().padLeft(2, '0');
+  final ap = h >= 12 ? 'PM' : 'AM';
+
+  if (h > 12) h -= 12;
+  if (h == 0) h = 12;
+
+  return '$h:$m $ap';
+}
 
   pw.Widget mainSlip() {
     final ticketNo = (ticket['ticket_no'] ?? '').toString();
