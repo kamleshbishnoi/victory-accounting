@@ -16,6 +16,7 @@ Future<pw.Document> generateTicketPdf(Map<String, dynamic> ticket) async {
   final terms = (settings['terms_conditions'] ?? '').toString();
   final footer = (settings['ticket_footer'] ?? 'Thank you for visiting').toString();
   final parkingCopy = settings['parking_copy'] == true;
+  print('PDF SETTINGS IN PRINT = $settings');
 
   final pageFormat = PdfPageFormat(
     80 * PdfPageFormat.mm,
@@ -59,7 +60,35 @@ String timeText() {
 }
 
   pw.Widget mainSlip() {
-    final ticketNo = (ticket['ticket_no'] ?? '').toString();
+
+  final settings = (ticket['branch_settings'] is Map)
+      ? Map<String, dynamic>.from(ticket['branch_settings'])
+      : <String, dynamic>{};
+
+  final branch = (ticket['branch_code'] ?? '').toString();
+
+  final branchName =
+      (settings['branch_name'] ?? branch).toString();
+
+  final companyName =
+      (settings['company_name'] ?? '').toString();
+
+  final gstNo =
+      (settings['gst_number'] ?? '').toString();
+
+  final address =
+      (settings['address'] ?? '').toString();
+
+  final phone =
+      (settings['phone'] ?? '').toString();
+
+  final terms =
+      (settings['terms_conditions'] ?? '').toString();
+
+  final footer =
+      (settings['ticket_footer'] ?? '').toString();
+
+  final ticketNo = (ticket['ticket_no'] ?? '').toString();
     final payment = (ticket['payment_mode'] ?? ticket['payment_method'] ?? '').toString();
 
     final items = (ticket['ticket_items'] is List)
@@ -135,35 +164,44 @@ String timeText() {
           ],
         ),
 
-        pw.SizedBox(height: 6),
-        pw.Center(child: pw.Text('GST Included')),
-        pw.Center(child: pw.Text(footer)),
+       pw.SizedBox(height: 6),
+pw.Center(child: pw.Text('GST Included')),
 
-        if (terms.isNotEmpty) ...[
-          pw.SizedBox(height: 6),
-          pw.Text(terms, style: const pw.TextStyle(fontSize: 8)),
-        ],
+if (terms.isNotEmpty) ...[
+  pw.SizedBox(height: 6),
+  pw.Text('Terms & Conditions',
+      style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+  pw.Text(terms, style: const pw.TextStyle(fontSize: 8)),
+],
+
+if (footer.isNotEmpty) ...[
+  pw.SizedBox(height: 4),
+  pw.Center(child: pw.Text(footer, style: const pw.TextStyle(fontSize: 9))),
+],
       ],
     );
   }
 
   pw.Widget parkingSlip() {
-    return pw.Center(
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.center,
-        children: [
-          pw.Text(
-            'PARKING',
-            style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+  return pw.Center(
+    child: pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.center,
+      children: [
+        pw.Text(
+          'PARKING',
+          style: pw.TextStyle(
+            fontSize: 24,
+            fontWeight: pw.FontWeight.bold,
           ),
-          pw.SizedBox(height: 8),
-          pw.Text('Ticket No: ${ticket['ticket_no'] ?? ''}'),
-          pw.Text('Date: ${dateText()}'),
-          pw.Text('Time: ${timeText()}'),
-        ],
-      ),
-    );
-  }
+        ),
+        pw.SizedBox(height: 8),
+        pw.Text('Ticket No: ${ticket['ticket_no'] ?? ''}'),
+        pw.Text('Date: ${dateText()}'),
+        pw.Text('Time: ${timeText()}'),
+      ],
+    ),
+  );
+}
 
   doc.addPage(pw.Page(pageFormat: pageFormat, build: (_) => mainSlip()));
 

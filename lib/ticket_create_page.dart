@@ -428,16 +428,23 @@ class _TicketCreatePageState extends State<TicketCreatePage> {
         );
       } catch (_) {}
 
-final branchSettings = await _supabase
+final settingsRows = await _supabase
     .from('branch_settings')
-    .select()
-    .eq('branch_code', branchCode!.trim().toUpperCase())
-    .maybeSingle();
+    .select('*');
 
-print('Branch Code = ${branchCode!.trim().toUpperCase()}');
-print('Branch Settings = $branchSettings');
+print('ALL SETTINGS = $settingsRows');
 
-fullTicket['branch_settings'] = branchSettings;
+final branchSettings = (settingsRows as List)
+    .firstWhere(
+      (r) => (r['branch_code'] ?? '').toString().trim().toUpperCase() ==
+          branchCode!.trim().toUpperCase(),
+      orElse: () => {},
+    );
+
+print('PDF Branch Code = ${branchCode!.trim().toUpperCase()}');
+print('PDF Branch Settings = $branchSettings');
+
+fullTicket['branch_settings'] = branchSettings ?? {};
 
 
 fullTicket['created_at'] = insertedTicket['created_at'];
