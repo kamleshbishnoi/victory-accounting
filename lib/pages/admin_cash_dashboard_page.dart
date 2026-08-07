@@ -4,10 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class AdminCashDashboardPage extends StatefulWidget {
   final String username;
 
-  const AdminCashDashboardPage({
-    super.key,
-    required this.username,
-  });
+  const AdminCashDashboardPage({super.key, required this.username});
 
   @override
   State<AdminCashDashboardPage> createState() => _AdminCashDashboardPageState();
@@ -27,9 +24,7 @@ class _AdminCashDashboardPageState extends State<AdminCashDashboardPage> {
 
   bool get _isAdmin {
     final u = widget.username.trim().toLowerCase();
-    return u == 'admin' ||
-        u == 'kamlesh' ||
-        u == 'ks.29bishnoi@gmail.com';
+    return u == 'admin' || u == 'kamlesh' || u == 'ks.29bishnoi@gmail.com';
   }
 
   String _dateOnly(DateTime d) => d.toIso8601String().split('T').first;
@@ -163,8 +158,7 @@ class _AdminCashDashboardPageState extends State<AdminCashDashboardPage> {
         }
       } catch (_) {}
 
-      final cashInHand =
-          openingBalance + cashSale + otherCashIn - totalCashOut;
+      final cashInHand = openingBalance + cashSale + otherCashIn - totalCashOut;
 
       summary.add({
         'branch_code': branch,
@@ -312,21 +306,15 @@ class _AdminCashDashboardPageState extends State<AdminCashDashboardPage> {
 
   void _msg(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
   Widget build(BuildContext context) {
     if (!_isAdmin) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Admin Cash Dashboard'),
-        ),
-        body: const Center(
-          child: Text('Access denied'),
-        ),
+        appBar: AppBar(title: const Text('Admin Cash Dashboard')),
+        body: const Center(child: Text('Access denied')),
       );
     }
 

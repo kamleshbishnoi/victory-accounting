@@ -125,10 +125,7 @@ class _CommissionSettingsPageState extends State<CommissionSettingsPage> {
 
   Future<void> _deleteRate(String id) async {
     try {
-      await supabase
-          .from('commission_rate_settings')
-          .delete()
-          .eq('id', id);
+      await supabase.from('commission_rate_settings').delete().eq('id', id);
 
       _msg('Rate deleted');
       await _loadRates();
@@ -139,9 +136,7 @@ class _CommissionSettingsPageState extends State<CommissionSettingsPage> {
 
   void _msg(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   Widget _buildAddCard() {
@@ -177,7 +172,9 @@ class _CommissionSettingsPageState extends State<CommissionSettingsPage> {
                 Expanded(
                   child: TextFormField(
                     controller: _percentController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: const InputDecoration(
                       labelText: 'Commission %',
                       hintText: 'Example: 10',
@@ -239,12 +236,11 @@ class _CommissionSettingsPageState extends State<CommissionSettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Commission Settings • ${widget.branchName} ($_branchCode)'),
+        title: Text(
+          'Commission Settings • ${widget.branchName} ($_branchCode)',
+        ),
         actions: [
-          IconButton(
-            onPressed: _loadRates,
-            icon: const Icon(Icons.refresh),
-          ),
+          IconButton(onPressed: _loadRates, icon: const Icon(Icons.refresh)),
         ],
       ),
       body: Padding(
@@ -266,14 +262,14 @@ class _CommissionSettingsPageState extends State<CommissionSettingsPage> {
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : _rates.isEmpty
-                      ? const Center(child: Text('No commission rates found'))
-                      : ListView.separated(
-                          itemCount: _rates.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            return _buildRateCard(_rates[index]);
-                          },
-                        ),
+                  ? const Center(child: Text('No commission rates found'))
+                  : ListView.separated(
+                      itemCount: _rates.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        return _buildRateCard(_rates[index]);
+                      },
+                    ),
             ),
           ],
         ),

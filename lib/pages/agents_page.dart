@@ -4,10 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class AgentsPage extends StatefulWidget {
   final String branchCode;
 
-  const AgentsPage({
-    super.key,
-    required this.branchCode,
-  });
+  const AgentsPage({super.key, required this.branchCode});
 
   @override
   State<AgentsPage> createState() => _AgentsPageState();
@@ -47,9 +44,7 @@ class _AgentsPageState extends State<AgentsPage> {
 
   void _showMsg(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   List<Map<String, dynamic>> get _filteredAgents {
@@ -66,8 +61,9 @@ class _AgentsPageState extends State<AgentsPage> {
 
   Widget _buildTopCard() {
     final total = _agents.length;
-    final activeCount =
-        _agents.where((e) => (e['active'] ?? true) == true).length;
+    final activeCount = _agents
+        .where((e) => (e['active'] ?? true) == true)
+        .length;
     final inactiveCount = total - activeCount;
 
     return Card(
@@ -121,9 +117,7 @@ class _AgentsPageState extends State<AgentsPage> {
     final rows = _filteredAgents;
 
     if (rows.isEmpty) {
-      return const Center(
-        child: Text('No agents found'),
-      );
+      return const Center(child: Text('No agents found'));
     }
 
     return ListView.separated(
@@ -139,9 +133,7 @@ class _AgentsPageState extends State<AgentsPage> {
         return Card(
           child: ListTile(
             leading: CircleAvatar(
-              child: Text(
-                name.isNotEmpty ? name[0].toUpperCase() : 'A',
-              ),
+              child: Text(name.isNotEmpty ? name[0].toUpperCase() : 'A'),
             ),
             title: Text(name.isEmpty ? '-' : name),
             subtitle: Text(
@@ -164,10 +156,7 @@ class _AgentsPageState extends State<AgentsPage> {
       appBar: AppBar(
         title: Text('Agents • ${widget.branchCode}'),
         actions: [
-          IconButton(
-            onPressed: _loadAgents,
-            icon: const Icon(Icons.refresh),
-          ),
+          IconButton(onPressed: _loadAgents, icon: const Icon(Icons.refresh)),
         ],
       ),
       body: Padding(

@@ -5,11 +5,7 @@ class ReportsPage extends StatefulWidget {
   final String username;
   final String branch;
 
-  const ReportsPage({
-    super.key,
-    required this.username,
-    required this.branch,
-  });
+  const ReportsPage({super.key, required this.username, required this.branch});
 
   @override
   State<ReportsPage> createState() => _ReportsPageState();
@@ -53,17 +49,25 @@ class _ReportsPageState extends State<ReportsPage> {
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
-  bool _isSameMonth(DateTime a, DateTime b) => a.year == b.year && a.month == b.month;
+  bool _isSameMonth(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month;
 
   DateTime _parseDate(String iso) => DateTime.tryParse(iso) ?? DateTime.now();
 
-  String _fmt(DateTime d) => '${d.day.toString().padLeft(2, '0')}-${d.month.toString().padLeft(2, '0')}';
+  String _fmt(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}-${d.month.toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
-    final todayList = tx.where((t) => _isSameDay(_parseDate(t['date'] as String? ?? ''), today)).toList();
-    final monthList = tx.where((t) => _isSameMonth(_parseDate(t['date'] as String? ?? ''), today)).toList();
+    final todayList = tx
+        .where((t) => _isSameDay(_parseDate(t['date'] as String? ?? ''), today))
+        .toList();
+    final monthList = tx
+        .where(
+          (t) => _isSameMonth(_parseDate(t['date'] as String? ?? ''), today),
+        )
+        .toList();
 
     final totalIncome = _sumIncome(tx);
     final totalExpense = _sumExpense(tx);
@@ -77,7 +81,13 @@ class _ReportsPageState extends State<ReportsPage> {
     // last 7 days totals
     final last7 = <DateTime>[];
     for (int i = 0; i < 7; i++) {
-      last7.add(DateTime(today.year, today.month, today.day).subtract(Duration(days: i)));
+      last7.add(
+        DateTime(
+          today.year,
+          today.month,
+          today.day,
+        ).subtract(Duration(days: i)),
+      );
     }
 
     return Scaffold(
@@ -99,27 +109,41 @@ class _ReportsPageState extends State<ReportsPage> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: _StatCard(title: 'Today Income', value: todayIncome)),
+                Expanded(
+                  child: _StatCard(title: 'Today Income', value: todayIncome),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _StatCard(title: 'Today Expense', value: todayExpense)),
+                Expanded(
+                  child: _StatCard(title: 'Today Expense', value: todayExpense),
+                ),
               ],
             ),
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _StatCard(title: 'Month Income', value: monthIncome)),
+                Expanded(
+                  child: _StatCard(title: 'Month Income', value: monthIncome),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _StatCard(title: 'Month Expense', value: monthExpense)),
+                Expanded(
+                  child: _StatCard(title: 'Month Expense', value: monthExpense),
+                ),
               ],
             ),
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _StatCard(title: 'Total Income', value: totalIncome)),
+                Expanded(
+                  child: _StatCard(title: 'Total Income', value: totalIncome),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _StatCard(title: 'Total Expense', value: totalExpense)),
+                Expanded(
+                  child: _StatCard(title: 'Total Expense', value: totalExpense),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: _StatCard(title: 'Net', value: net)),
+                Expanded(
+                  child: _StatCard(title: 'Net', value: net),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -129,17 +153,27 @@ class _ReportsPageState extends State<ReportsPage> {
                 child: ListView.separated(
                   padding: const EdgeInsets.all(12),
                   itemCount: last7.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final day = last7[index];
-                    final dayTx = tx.where((t) => _isSameDay(_parseDate(t['date'] as String? ?? ''), day)).toList();
+                    final dayTx = tx
+                        .where(
+                          (t) => _isSameDay(
+                            _parseDate(t['date'] as String? ?? ''),
+                            day,
+                          ),
+                        )
+                        .toList();
                     final inc = _sumIncome(dayTx);
                     final exp = _sumExpense(dayTx);
                     final netDay = inc - exp;
 
                     return ListTile(
                       title: Text('Day: ${_fmt(day)}'),
-                      subtitle: Text('Income: ${inc.toStringAsFixed(2)} • Expense: ${exp.toStringAsFixed(2)}'),
+                      subtitle: Text(
+                        'Income: ${inc.toStringAsFixed(2)} • Expense: ${exp.toStringAsFixed(2)}',
+                      ),
                       trailing: Text(
                         netDay.toStringAsFixed(2),
                         style: TextStyle(

@@ -4,10 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class SalaryPage extends StatefulWidget {
   final String branch;
 
-  const SalaryPage({
-    super.key,
-    required this.branch,
-  });
+  const SalaryPage({super.key, required this.branch});
 
   @override
   State<SalaryPage> createState() => _SalaryPageState();
@@ -104,9 +101,9 @@ class _SalaryPageState extends State<SalaryPage> {
         });
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Branch not found')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Branch not found')));
         }
         return;
       }
@@ -176,13 +173,11 @@ class _SalaryPageState extends State<SalaryPage> {
       for (final tx in transactions) {
         final category = (tx['category'] ?? '').toString().trim();
         final amount = toDouble(tx['amount']);
-        final staffName = (tx['staff_name'] ??
-                tx['person_name'] ??
-                tx['person'] ??
-                '')
-            .toString()
-            .trim()
-            .toLowerCase();
+        final staffName =
+            (tx['staff_name'] ?? tx['person_name'] ?? tx['person'] ?? '')
+                .toString()
+                .trim()
+                .toLowerCase();
 
         if (staffName.isEmpty || !result.containsKey(staffName)) continue;
 
@@ -240,8 +235,11 @@ class _SalaryPageState extends State<SalaryPage> {
         finalList.add(row);
       });
 
-      finalList.sort((a, b) =>
-          (a['staff_name'] ?? '').toString().compareTo((b['staff_name'] ?? '').toString()));
+      finalList.sort(
+        (a, b) => (a['staff_name'] ?? '').toString().compareTo(
+          (b['staff_name'] ?? '').toString(),
+        ),
+      );
 
       setState(() {
         salaryData = finalList;
@@ -254,9 +252,9 @@ class _SalaryPageState extends State<SalaryPage> {
     } catch (e) {
       setState(() => loading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Salary load error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Salary load error: $e')));
       }
     }
   }
@@ -291,10 +289,7 @@ class _SalaryPageState extends State<SalaryPage> {
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 16,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
           ),
         ],
       ),
@@ -332,10 +327,7 @@ class _SalaryPageState extends State<SalaryPage> {
             icon: const Icon(Icons.calendar_month),
             onPressed: pickMonth,
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: loadSalary,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: loadSalary),
         ],
       ),
       body: loading

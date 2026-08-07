@@ -32,11 +32,7 @@ class HomePage extends StatefulWidget {
   final String username;
   final String branch;
 
-  const HomePage({
-    required this.username,
-    required this.branch,
-    super.key,
-  });
+  const HomePage({required this.username, required this.branch, super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -63,305 +59,233 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
-void initState() {
-  super.initState();
-  _branch = _normalizeBranch(widget.branch);
-  _initUserBranch();
-}
-
-Future<void> _initUserBranch() async {
-  try {
-    final row = await _supabase
-        .from('staff_users')
-        .select('role, branch_code')
-        .eq('username', widget.username.trim().toLowerCase())
-        .single();
-
-    final role = (row['role'] ?? '').toString().toUpperCase();
-    final branchCode = (row['branch_code'] ?? '').toString().toUpperCase();
-
-    _isAdminUser = role == 'ADMIN';
-    _branch = _isAdminUser ? 'ALL' : _normalizeBranch(branchCode);
-
-    await Storage.setSelectedBranch(_branch);
-  } catch (e) {
-    _isAdminUser = false;
+  void initState() {
+    super.initState();
     _branch = _normalizeBranch(widget.branch);
+    _initUserBranch();
   }
 
-  if (mounted) {
-    setState(() => _loadingBranch = false);
+  Future<void> _initUserBranch() async {
+    try {
+      final row = await _supabase
+          .from('staff_users')
+          .select('role, branch_code')
+          .eq('username', widget.username.trim().toLowerCase())
+          .single();
+
+      final role = (row['role'] ?? '').toString().toUpperCase();
+      final branchCode = (row['branch_code'] ?? '').toString().toUpperCase();
+
+      _isAdminUser = role == 'ADMIN';
+      _branch = _isAdminUser ? 'ALL' : _normalizeBranch(branchCode);
+
+      await Storage.setSelectedBranch(_branch);
+    } catch (e) {
+      _isAdminUser = false;
+      _branch = _normalizeBranch(widget.branch);
+    }
+
+    if (mounted) {
+      setState(() => _loadingBranch = false);
+    }
   }
-}
 
   Future<void> _reloadBranch() async {
-  if (!_isAdminUser) return;
+    if (!_isAdminUser) return;
 
-  final selected = await Storage.getSelectedBranch();
-  if (!mounted) return;
-  setState(() => _branch = _normalizeBranch(selected));
-}
+    final selected = await Storage.getSelectedBranch();
+    if (!mounted) return;
+    setState(() => _branch = _normalizeBranch(selected));
+  }
 
   Future<void> _openBranchesAndReload() async {
-  if (!_isAdminUser) {
-    _toast('Aap sirf apni branch access kar sakte ho.');
-    return;
+    if (!_isAdminUser) {
+      _toast('Aap sirf apni branch access kar sakte ho.');
+      return;
+    }
+
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const BranchesPage()),
+    );
+    if (!mounted) return;
+
+    if (result == true) {
+      await _reloadBranch();
+    }
   }
 
-  final result = await Navigator.push<bool>(
-    context,
-    MaterialPageRoute(builder: (_) => const BranchesPage()),
-  );
-  if (!mounted) return;
+  Future<void> _logout() async {
+    await Storage.setSelectedBranch('ALL');
+    if (!mounted) return;
 
-  if (result == true) {
-    await _reloadBranch();
-  }
-}
-
-Future<void> _logout() async {
-  await Storage.setSelectedBranch('ALL');
-  if (!mounted) return;
-
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (_) => const LoginPage()),
-  );
-}
-
-  Future<void> _backToControlCenter() async {
-  if (!_isAdminUser) return;
-
-  await Storage.setSelectedBranch('ALL');
-  if (!mounted) return;
-  setState(() => _branch = 'ALL');
-}
-
-  bool _isNavigating = false;
-
-void _go(Widget page) {
-  if (_isNavigating) return;
-
-  _isNavigating = true;
-
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (_) => page),
-  ).then((_) {
-    _isNavigating = false;
-  });
-}
-
-  void _toast(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginPage()),
     );
   }
 
+  Future<void> _backToControlCenter() async {
+    if (!_isAdminUser) return;
+
+    await Storage.setSelectedBranch('ALL');
+    if (!mounted) return;
+    setState(() => _branch = 'ALL');
+  }
+
+  bool _isNavigating = false;
+
+  void _go(Widget page) {
+    if (_isNavigating) return;
+
+    _isNavigating = true;
+
+    Navigator.push(context, MaterialPageRoute(builder: (_) => page)).then((_) {
+      _isNavigating = false;
+    });
+  }
+
+  void _toast(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   List<_DashItem> get _dashboardItems {
-  if (_isControlCenterMode) {
+    if (_isControlCenterMode) {
+      return <_DashItem>[
+        _DashItem(
+          title: 'Victory Control Center',
+          icon: Icons.account_balance,
+          onTap: () => _go(VictoryControlCenterPage(username: widget.username)),
+        ),
+        _DashItem(
+          title: 'Transactions Monitor',
+          icon: Icons.receipt_long,
+          onTap: () => _go(AdminTransactionsPage(username: widget.username)),
+        ),
+        _DashItem(
+          title: 'Commission Monitor',
+          icon: Icons.account_balance_wallet,
+          onTap: () =>
+              _go(AdminCommissionMonitorPage(username: widget.username)),
+        ),
+        _DashItem(
+          title: 'Ticket Report Monitor',
+          icon: Icons.list_alt,
+          onTap: () => _go(AdminTicketReportPage()),
+        ),
+        _DashItem(
+          title: 'Attendance Monitor',
+          icon: Icons.fact_check,
+          onTap: () => _go(AdminAttendancePage()),
+        ),
+        _DashItem(
+          title: 'Staff Monitor',
+          icon: Icons.people,
+          onTap: () => _go(AdminStaffPage()),
+        ),
+        _DashItem(
+          title: 'Salary Monitor',
+          icon: Icons.currency_rupee,
+          onTap: () => _go(AdminSalaryPage()),
+        ),
+        _DashItem(
+          title: 'Reports',
+          icon: Icons.bar_chart,
+          onTap: () =>
+              _go(ReportsPage(username: widget.username, branch: _branch)),
+        ),
+        _DashItem(
+          title: 'Settings',
+          icon: Icons.settings,
+          onTap: () =>
+              _go(SettingsPage(username: widget.username, branch: _branch)),
+        ),
+      ];
+    }
+
     return <_DashItem>[
       _DashItem(
-        title: 'Victory Control Center',
-        icon: Icons.account_balance,
-        onTap: () => _go(
-          VictoryControlCenterPage(username: widget.username),
-        ),
+        title: 'Ticket',
+        icon: Icons.confirmation_number,
+        onTap: () =>
+            _go(TicketCreatePage(username: widget.username, branch: _branch)),
       ),
       _DashItem(
-        title: 'Transactions Monitor',
+        title: 'Ticket Items',
+        icon: Icons.inventory_2,
+        onTap: () => _go(ItemsPage(branch: _branch)),
+      ),
+      _DashItem(
+        title: 'Transactions',
         icon: Icons.receipt_long,
-        onTap: () => _go(
-          AdminTransactionsPage(username: widget.username),
-        ),
-      ),
-      _DashItem(
-        title: 'Commission Monitor',
-        icon: Icons.account_balance_wallet,
-        onTap: () => _go(
-          AdminCommissionMonitorPage(username: widget.username),
-        ),
-      ),
-      _DashItem(
-        title: 'Ticket Report Monitor',
-        icon: Icons.list_alt,
-        onTap: () => _go(
-          AdminTicketReportPage(),
-        ),
-      ),
-      _DashItem(
-        title: 'Attendance Monitor',
-        icon: Icons.fact_check,
-        onTap: () => _go(
-          AdminAttendancePage(),
-        ),
-      ),
-      _DashItem(
-        title: 'Staff Monitor',
-        icon: Icons.people,
-        onTap: () => _go(
-          AdminStaffPage(),
-        ),
-      ),
-      _DashItem(
-        title: 'Salary Monitor',
-        icon: Icons.currency_rupee,
-        onTap: () => _go(
-          AdminSalaryPage(),
-        ),
+        onTap: () =>
+            _go(TransactionsPage(username: widget.username, branch: _branch)),
       ),
       _DashItem(
         title: 'Reports',
         icon: Icons.bar_chart,
+        onTap: () =>
+            _go(ReportsPage(username: widget.username, branch: _branch)),
+      ),
+      _DashItem(
+        title: 'Ticket Report (Admin)',
+        icon: Icons.list_alt,
+        onTap: () =>
+            _go(TicketReportPage(username: widget.username, branch: _branch)),
+      ),
+      _DashItem(
+        title: 'Attendance',
+        icon: Icons.fact_check,
+        onTap: () =>
+            _go(AttendancePage(username: widget.username, branch: _branch)),
+      ),
+      _DashItem(
+        title: 'Staff',
+        icon: Icons.people,
+        onTap: () => _go(StaffPage(username: widget.username, branch: _branch)),
+      ),
+      _DashItem(
+        title: 'Salary',
+        icon: Icons.currency_rupee,
+        onTap: () => _go(SalaryPage(branch: _branch)),
+      ),
+      _DashItem(
+        title: 'Agents',
+        icon: Icons.groups,
+        onTap: () => _go(AgentsPage(branchCode: _branch)),
+      ),
+      _DashItem(
+        title: 'Agent Master',
+        icon: Icons.person_add_alt_1,
+        onTap: () => _go(AgentMasterPage(branchCode: _branch)),
+      ),
+      _DashItem(
+        title: 'Commission',
+        icon: Icons.account_balance_wallet,
+        onTap: () =>
+            _go(CommissionPage(branchCode: _branch, branchName: _branch)),
+      ),
+      _DashItem(
+        title: 'Agent Comm. Report',
+        icon: Icons.assessment,
         onTap: () => _go(
-          ReportsPage(
-            username: widget.username,
-            branch: _branch,
-          ),
+          AgentCommissionReportPage(branchCode: _branch, branchName: _branch),
         ),
       ),
       _DashItem(
         title: 'Settings',
         icon: Icons.settings,
-        onTap: () => _go(
-          SettingsPage(
-            username: widget.username,
-            branch: _branch,
-          ),
-        ),
+        onTap: () =>
+            _go(SettingsPage(username: widget.username, branch: _branch)),
       ),
     ];
   }
 
-  return <_DashItem>[
-    _DashItem(
-      title: 'Ticket',
-      icon: Icons.confirmation_number,
-      onTap: () => _go(
-        TicketCreatePage(
-          username: widget.username,
-          branch: _branch,
-        ),
-      ),
-    ),
-    _DashItem(
-      title: 'Ticket Items',
-      icon: Icons.inventory_2,
-      onTap: () => _go(ItemsPage(branch: _branch)),
-    ),
-    _DashItem(
-      title: 'Transactions',
-      icon: Icons.receipt_long,
-      onTap: () => _go(
-        TransactionsPage(
-          username: widget.username,
-          branch: _branch,
-        ),
-      ),
-    ),
-    _DashItem(
-      title: 'Reports',
-      icon: Icons.bar_chart,
-      onTap: () => _go(
-        ReportsPage(
-          username: widget.username,
-          branch: _branch,
-        ),
-      ),
-    ),
-    _DashItem(
-      title: 'Ticket Report (Admin)',
-      icon: Icons.list_alt,
-      onTap: () => _go(
-        TicketReportPage(
-          username: widget.username,
-          branch: _branch,
-        ),
-      ),
-    ),
-    _DashItem(
-      title: 'Attendance',
-      icon: Icons.fact_check,
-      onTap: () => _go(
-        AttendancePage(
-          username: widget.username,
-          branch: _branch,
-        ),
-      ),
-    ),
-    _DashItem(
-      title: 'Staff',
-      icon: Icons.people,
-      onTap: () => _go(
-        StaffPage(
-          username: widget.username,
-          branch: _branch,
-        ),
-      ),
-    ),
-    _DashItem(
-  title: 'Salary',
-  icon: Icons.currency_rupee,
-  onTap: () => _go(
-    SalaryPage(
-      branch: _branch,
-    ),
-  ),
-),
-    _DashItem(
-      title: 'Agents',
-      icon: Icons.groups,
-      onTap: () => _go(
-        AgentsPage(branchCode: _branch),
-      ),
-    ),
-    _DashItem(
-      title: 'Agent Master',
-      icon: Icons.person_add_alt_1,
-      onTap: () => _go(
-        AgentMasterPage(branchCode: _branch),
-      ),
-    ),
-    _DashItem(
-      title: 'Commission',
-      icon: Icons.account_balance_wallet,
-      onTap: () => _go(
-        CommissionPage(
-          branchCode: _branch,
-          branchName: _branch,
-        ),
-      ),
-    ),
-    _DashItem(
-      title: 'Agent Comm. Report',
-      icon: Icons.assessment,
-      onTap: () => _go(
-        AgentCommissionReportPage(
-          branchCode: _branch,
-          branchName: _branch,
-        ),
-      ),
-    ),
-    _DashItem(
-      title: 'Settings',
-      icon: Icons.settings,
-      onTap: () => _go(
-        SettingsPage(
-          username: widget.username,
-          branch: _branch,
-        ),
-      ),
-    ),
-  ];
-}
-
   @override
   Widget build(BuildContext context) {
     if (_loadingBranch) {
-  return const Scaffold(
-    body: Center(child: CircularProgressIndicator()),
-  );
-}
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -370,19 +294,19 @@ void _go(Widget page) {
               : 'Victory • $_branch',
         ),
         leading: (_isAdminUser && !_isControlCenterMode)
-    ? IconButton(
-        tooltip: 'Back to Control Center',
-        icon: const Icon(Icons.arrow_back),
-        onPressed: _backToControlCenter,
-      )
-    : null,
+            ? IconButton(
+                tooltip: 'Back to Control Center',
+                icon: const Icon(Icons.arrow_back),
+                onPressed: _backToControlCenter,
+              )
+            : null,
         actions: [
           if (_isAdminUser)
-  IconButton(
-    tooltip: 'Switch Branch',
-    icon: const Icon(Icons.account_tree),
-    onPressed: _openBranchesAndReload,
-  ),
+            IconButton(
+              tooltip: 'Switch Branch',
+              icon: const Icon(Icons.account_tree),
+              onPressed: _openBranchesAndReload,
+            ),
           IconButton(
             tooltip: 'Logout',
             icon: const Icon(Icons.logout),
@@ -401,9 +325,7 @@ void _go(Widget page) {
                 leading: const CircleAvatar(child: Icon(Icons.person)),
                 title: Text('Welcome ${widget.username}'),
                 subtitle: Text(
-                  _isControlCenterMode
-                      ? 'System Overview'
-                      : 'Branch: $_branch',
+                  _isControlCenterMode ? 'System Overview' : 'Branch: $_branch',
                 ),
               ),
             ),
@@ -439,11 +361,7 @@ class _DashItem {
   final IconData icon;
   final VoidCallback onTap;
 
-  _DashItem({
-    required this.title,
-    required this.icon,
-    required this.onTap,
-  });
+  _DashItem({required this.title, required this.icon, required this.onTap});
 }
 
 class _DashboardCard extends StatelessWidget {

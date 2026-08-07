@@ -18,8 +18,7 @@ class AgentCommissionReportPage extends StatefulWidget {
       _AgentCommissionReportPageState();
 }
 
-class _AgentCommissionReportPageState
-    extends State<AgentCommissionReportPage> {
+class _AgentCommissionReportPageState extends State<AgentCommissionReportPage> {
   final supabase = Supabase.instance.client;
 
   bool _loading = true;
@@ -134,8 +133,7 @@ class _AgentCommissionReportPageState
         };
       });
 
-      summary[agentId]!['entries'] =
-          (summary[agentId]!['entries'] as int) + 1;
+      summary[agentId]!['entries'] = (summary[agentId]!['entries'] as int) + 1;
       summary[agentId]!['total_commission'] =
           (summary[agentId]!['total_commission'] as double) + amount;
 
@@ -149,15 +147,14 @@ class _AgentCommissionReportPageState
     }
 
     final list = summary.entries.map((e) {
-      return {
-        'agent_id': e.key,
-        ...e.value,
-      };
+      return {'agent_id': e.key, ...e.value};
     }).toList();
 
-    list.sort((a, b) => (a['agent_name'] ?? '')
-        .toString()
-        .compareTo((b['agent_name'] ?? '').toString()));
+    list.sort(
+      (a, b) => (a['agent_name'] ?? '').toString().compareTo(
+        (b['agent_name'] ?? '').toString(),
+      ),
+    );
 
     return list;
   }
@@ -166,18 +163,22 @@ class _AgentCommissionReportPageState
       _rows.fold(0.0, (sum, e) => sum + _toDouble(e['commission_amount']));
 
   double get _paidCommission => _rows.fold(
-        0.0,
-        (sum, e) => sum + (((e['commission_paid'] ?? false) == true)
+    0.0,
+    (sum, e) =>
+        sum +
+        (((e['commission_paid'] ?? false) == true)
             ? _toDouble(e['commission_amount'])
             : 0),
-      );
+  );
 
   double get _pendingCommission => _rows.fold(
-        0.0,
-        (sum, e) => sum + (((e['commission_paid'] ?? false) == false)
+    0.0,
+    (sum, e) =>
+        sum +
+        (((e['commission_paid'] ?? false) == false)
             ? _toDouble(e['commission_amount'])
             : 0),
-      );
+  );
 
   Future<void> _pickFromDate() async {
     final d = await showDatePicker(
@@ -210,7 +211,9 @@ class _AgentCommissionReportPageState
       final summary = _buildSummary();
 
       final buffer = StringBuffer();
-      buffer.writeln('Agent Name,Agent Code,Entries,Total Commission,Paid,Pending');
+      buffer.writeln(
+        'Agent Name,Agent Code,Entries,Total Commission,Paid,Pending',
+      );
 
       for (final s in summary) {
         buffer.writeln(
@@ -245,9 +248,7 @@ class _AgentCommissionReportPageState
 
   void _msg(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   Widget _chip(String title, String value) {
@@ -273,14 +274,8 @@ class _AgentCommissionReportPageState
       appBar: AppBar(
         title: Text('Agent Commission Report • ${widget.branchName}'),
         actions: [
-          IconButton(
-            onPressed: _loadAll,
-            icon: const Icon(Icons.refresh),
-          ),
-          IconButton(
-            onPressed: _exportCsv,
-            icon: const Icon(Icons.download),
-          ),
+          IconButton(onPressed: _loadAll, icon: const Icon(Icons.refresh)),
+          IconButton(onPressed: _exportCsv, icon: const Icon(Icons.download)),
         ],
       ),
       body: Padding(
@@ -321,7 +316,10 @@ class _AgentCommissionReportPageState
                       items: const [
                         DropdownMenuItem(value: 'ALL', child: Text('All')),
                         DropdownMenuItem(value: 'PAID', child: Text('Paid')),
-                        DropdownMenuItem(value: 'PENDING', child: Text('Pending')),
+                        DropdownMenuItem(
+                          value: 'PENDING',
+                          child: Text('Pending'),
+                        ),
                       ],
                       onChanged: (v) async {
                         if (v == null) return;
@@ -370,56 +368,54 @@ class _AgentCommissionReportPageState
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : summary.isEmpty
-                      ? const Center(child: Text('No report data found'))
-                      : ListView.separated(
-                          itemCount: summary.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            final s = summary[index];
-                            return Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(14),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        '${s['agent_name']} (${s['agent_code']})',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
+                  ? const Center(child: Text('No report data found'))
+                  : ListView.separated(
+                      itemCount: summary.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final s = summary[index];
+                        return Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Text(
+                                    '${s['agent_name']} (${s['agent_code']})',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
                                     ),
-                                    Expanded(
-                                      child: Text('Entries: ${s['entries']}'),
-                                    ),
-                                    Expanded(
-                                      child: Text(
-                                        'Total: ₹${_fmt(s['total_commission'])}',
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Text(
-                                        'Paid: ₹${_fmt(s['paid_commission'])}',
-                                        style: const TextStyle(
-                                          color: Colors.green,
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Text(
-                                        'Pending: ₹${_fmt(s['pending_commission'])}',
-                                        style: const TextStyle(
-                                          color: Colors.orange,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
+                                Expanded(
+                                  child: Text('Entries: ${s['entries']}'),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    'Total: ₹${_fmt(s['total_commission'])}',
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    'Paid: ₹${_fmt(s['paid_commission'])}',
+                                    style: const TextStyle(color: Colors.green),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    'Pending: ₹${_fmt(s['pending_commission'])}',
+                                    style: const TextStyle(
+                                      color: Colors.orange,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
             ),
           ],
         ),

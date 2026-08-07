@@ -111,7 +111,9 @@ class _TicketReportPageState extends State<TicketReportPage> {
         branchName = 'ALL';
         rows = [];
         hasNext = false;
-        _toast('ALL mode me ticket report branch-wise nahi hoti. Branch select karo.');
+        _toast(
+          'ALL mode me ticket report branch-wise nahi hoti. Branch select karo.',
+        );
         return;
       }
 
@@ -152,14 +154,17 @@ class _TicketReportPageState extends State<TicketReportPage> {
       final offset = page * pageSize;
 
       // ✅ RPC call (expected to return List of rows)
-      final data = await supabase.rpc('get_ticket_report', params: {
-        'p_branch_id': branchId,
-        'p_from': from,
-        'p_to': toEx,
-        'p_payment': _payment,
-        'p_offset': offset,
-        'p_limit': pageSize + 1, // extra 1 for next page
-      });
+      final data = await supabase.rpc(
+        'get_ticket_report',
+        params: {
+          'p_branch_id': branchId,
+          'p_from': from,
+          'p_to': toEx,
+          'p_payment': _payment,
+          'p_offset': offset,
+          'p_limit': pageSize + 1, // extra 1 for next page
+        },
+      );
 
       final list = List<Map<String, dynamic>>.from(data as List);
 
@@ -238,11 +243,15 @@ class _TicketReportPageState extends State<TicketReportPage> {
     }
 
     final buf = StringBuffer();
-    buf.writeln('ticket_no,created_at,payment_mode,subtotal,discount_amount,final_amount,staff,items');
+    buf.writeln(
+      'ticket_no,created_at,payment_mode,subtotal,discount_amount,final_amount,staff,items',
+    );
 
     for (final t in rows) {
       final ticketNo = (t['ticket_no'] ?? '').toString().replaceAll(',', ' ');
-      final createdAt = _formatDt((t['created_at'] ?? '').toString()).replaceAll(',', ' ');
+      final createdAt = _formatDt(
+        (t['created_at'] ?? '').toString(),
+      ).replaceAll(',', ' ');
       final payment = (t['payment_mode'] ?? '').toString().replaceAll(',', ' ');
       final subtotal = (t['subtotal'] ?? 0).toString();
       final discount = (t['discount_amount'] ?? 0).toString();
@@ -250,7 +259,9 @@ class _TicketReportPageState extends State<TicketReportPage> {
       final staff = (t['staff_username'] ?? '').toString().replaceAll(',', ' ');
       final items = (t['items'] ?? '').toString().replaceAll(',', ' ');
 
-      buf.writeln('$ticketNo,$createdAt,$payment,$subtotal,$discount,$finalAmt,$staff,"$items"');
+      buf.writeln(
+        '$ticketNo,$createdAt,$payment,$subtotal,$discount,$finalAmt,$staff,"$items"',
+      );
     }
 
     final csv = buf.toString();
@@ -294,138 +305,166 @@ class _TicketReportPageState extends State<TicketReportPage> {
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : !_isAdmin
-              ? const Center(child: Text('Admin only'))
-              : branchId == null
-                  ? const Center(child: Text('Branch not configured'))
-                  : Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Branch: $branchName ($branchCode)'),
-                                  const SizedBox(height: 10),
-                                  Wrap(
-                                    spacing: 10,
-                                    runSpacing: 10,
-                                    children: [
-                                      OutlinedButton.icon(
-                                        icon: const Icon(Icons.date_range),
-                                        label: Text('From: ${_from.year}-${_from.month}-${_from.day}'),
-                                        onPressed: _pickFrom,
-                                      ),
-                                      OutlinedButton.icon(
-                                        icon: const Icon(Icons.date_range),
-                                        label: Text('To: ${_to.year}-${_to.month}-${_to.day}'),
-                                        onPressed: _pickTo,
-                                      ),
-                                      DropdownButton<String>(
-                                        value: _payment,
-                                        items: const [
-                                          DropdownMenuItem(value: 'ALL', child: Text('Payment: ALL')),
-                                          DropdownMenuItem(value: 'Cash', child: Text('Cash')),
-                                          DropdownMenuItem(value: 'UPI', child: Text('UPI')),
-                                          DropdownMenuItem(value: 'Card', child: Text('Card')),
-                                        ],
-                                        onChanged: (v) async {
-                                          setState(() {
-                                            _payment = v ?? 'ALL';
-                                            page = 0;
-                                          });
-                                          await _load();
-                                        },
-                                      ),
-                                    ],
+          ? const Center(child: Text('Admin only'))
+          : branchId == null
+          ? const Center(child: Text('Branch not configured'))
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Branch: $branchName ($branchCode)'),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: [
+                              OutlinedButton.icon(
+                                icon: const Icon(Icons.date_range),
+                                label: Text(
+                                  'From: ${_from.year}-${_from.month}-${_from.day}',
+                                ),
+                                onPressed: _pickFrom,
+                              ),
+                              OutlinedButton.icon(
+                                icon: const Icon(Icons.date_range),
+                                label: Text(
+                                  'To: ${_to.year}-${_to.month}-${_to.day}',
+                                ),
+                                onPressed: _pickTo,
+                              ),
+                              DropdownButton<String>(
+                                value: _payment,
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: 'ALL',
+                                    child: Text('Payment: ALL'),
                                   ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    'Showing: ${rows.length} tickets | Page: ${page + 1} | Total (this page): ₹${_sumFinal().toStringAsFixed(2)}',
-                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                  DropdownMenuItem(
+                                    value: 'Cash',
+                                    child: Text('Cash'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'UPI',
+                                    child: Text('UPI'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'Card',
+                                    child: Text('Card'),
+                                  ),
+                                ],
+                                onChanged: (v) async {
+                                  setState(() {
+                                    _payment = v ?? 'ALL';
+                                    page = 0;
+                                  });
+                                  await _load();
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Showing: ${rows.length} tickets | Page: ${page + 1} | Total (this page): ₹${_sumFinal().toStringAsFixed(2)}',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ✅ ONE-LINE ROWS
+                Expanded(
+                  child: rows.isEmpty
+                      ? const Center(child: Text('No tickets found'))
+                      : ListView.separated(
+                          itemCount: rows.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          itemBuilder: (_, i) {
+                            final t = rows[i];
+
+                            final ticketNo = (t['ticket_no'] ?? '').toString();
+                            final createdAt = _formatDt(
+                              (t['created_at'] ?? '').toString(),
+                            );
+                            final payment = (t['payment_mode'] ?? '')
+                                .toString();
+                            final finalAmt = (t['final_amount'] ?? 0)
+                                .toString();
+                            final discount = (t['discount_amount'] ?? 0)
+                                .toString();
+                            final staff = (t['staff_username'] ?? '')
+                                .toString();
+                            final itemsText = (t['items'] ?? '').toString();
+
+                            return Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.black12),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      '$createdAt | $ticketNo | $payment | ₹$finalAmt | Disc ₹$discount | $itemsText | $staff',
+                                      style: const TextStyle(fontSize: 13),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
+                ),
 
-                        // ✅ ONE-LINE ROWS
-                        Expanded(
-                          child: rows.isEmpty
-                              ? const Center(child: Text('No tickets found'))
-                              : ListView.separated(
-                                  itemCount: rows.length,
-                                  separatorBuilder: (_, __) => const Divider(height: 1),
-                                  itemBuilder: (_, i) {
-                                    final t = rows[i];
-
-                                    final ticketNo = (t['ticket_no'] ?? '').toString();
-                                    final createdAt = _formatDt((t['created_at'] ?? '').toString());
-                                    final payment = (t['payment_mode'] ?? '').toString();
-                                    final finalAmt = (t['final_amount'] ?? 0).toString();
-                                    final discount = (t['discount_amount'] ?? 0).toString();
-                                    final staff = (t['staff_username'] ?? '').toString();
-                                    final itemsText = (t['items'] ?? '').toString();
-
-                                    return Container(
-                                      width: double.infinity,
-                                      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context).colorScheme.surface,
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(color: Colors.black12),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              '$createdAt | $ticketNo | $payment | ₹$finalAmt | Disc ₹$discount | $itemsText | $staff',
-                                              style: const TextStyle(fontSize: 13),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
-                        ),
-
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
-                          child: Row(
-                            children: [
-                              ElevatedButton(
-                                onPressed: (page == 0 || loading)
-                                    ? null
-                                    : () async {
-                                        setState(() => page--);
-                                        await _load();
-                                      },
-                                child: const Text('Prev'),
-                              ),
-                              const SizedBox(width: 10),
-                              ElevatedButton(
-                                onPressed: (!hasNext || loading)
-                                    ? null
-                                    : () async {
-                                        setState(() => page++);
-                                        await _load();
-                                      },
-                                child: const Text('Next'),
-                              ),
-                              const Spacer(),
-                              Text('Page ${page + 1}'),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
+                  child: Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: (page == 0 || loading)
+                            ? null
+                            : () async {
+                                setState(() => page--);
+                                await _load();
+                              },
+                        child: const Text('Prev'),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: (!hasNext || loading)
+                            ? null
+                            : () async {
+                                setState(() => page++);
+                                await _load();
+                              },
+                        child: const Text('Next'),
+                      ),
+                      const Spacer(),
+                      Text('Page ${page + 1}'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }

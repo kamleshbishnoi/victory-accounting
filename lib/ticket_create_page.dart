@@ -57,9 +57,7 @@ class _TicketCreatePageState extends State<TicketCreatePage> {
 
   void _toast(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   void _resetFormOnly() {
@@ -156,14 +154,16 @@ class _TicketCreatePageState extends State<TicketCreatePage> {
 
       final items = await _supabase
           .from('items')
-          .select('id, code, name, price, branch_id, is_active')
+          .select('id, code, name, price, gst_percent, hsn_sac, gst_inclusive, branch_id, is_active')
           .eq('branch_id', branchId)
           .eq('is_active', true)
           .order('code', ascending: true);
 
       availableItems = List<Map<String, dynamic>>.from(items);
-      _previewTicketNo =
-          await _generateNextTicketNo(branchCode!, DateTime.now());
+      _previewTicketNo = await _generateNextTicketNo(
+        branchCode!,
+        DateTime.now(),
+      );
     } catch (e) {
       _toast('Init error: $e');
     } finally {
@@ -195,8 +195,7 @@ class _TicketCreatePageState extends State<TicketCreatePage> {
 
   double get subtotal => rows.fold(0.0, (sum, r) => sum + (r.lineTotal ?? 0.0));
 
-  double get discountValue =>
-      double.tryParse(_discountCtl.text.trim()) ?? 0.0;
+  double get discountValue => double.tryParse(_discountCtl.text.trim()) ?? 0.0;
 
   double get discountAmount {
     if (discountType == 'percent') {
@@ -290,6 +289,11 @@ class _TicketCreatePageState extends State<TicketCreatePage> {
     row.unitPriceSnapshot = (sel['price'] is num)
         ? (sel['price'] as num).toDouble()
         : (double.tryParse(sel['price'].toString()) ?? 0.0);
+    row.gstPercentSnapshot = (sel['gst_percent'] is num)
+        ? (sel['gst_percent'] as num).toDouble()
+        : (double.tryParse((sel['gst_percent'] ?? '0').toString()) ?? 0.0);
+    row.hsnSacSnapshot = (sel['hsn_sac'] ?? '').toString();
+    row.gstInclusiveSnapshot = sel['gst_inclusive'] != false;
     row.codeCtl.text = (sel['code'] ?? '').toString();
     row.qtyError = null;
 
@@ -390,25 +394,36 @@ class _TicketCreatePageState extends State<TicketCreatePage> {
         'discount_value': discountValue,
         'discount_amount': discountAmount,
         'final_amount': finalAmount,
-        'gst_rate': 18,
         'gst_included': true,
       };
 
-      final insertedTicket =
-          await _supabase.from('tickets').insert(ticketData).select().single();
+      final insertedTicket = await _supabase
+          .from('tickets')
+          .insert(ticketData)
+          .select()
+          .single();
 
       final ticketId = (insertedTicket['id'] ?? '').toString();
 
       final itemsToInsert = rows
           .where((r) => r.selectedItemId != null && (r.qty ?? 0) > 0)
-          .map((r) => {
-                'ticket_id': ticketId,
-                'item_id': r.selectedItemId,
-                'item_name_snapshot': r.itemNameSnapshot,
-                'unit_price_snapshot': r.unitPriceSnapshot,
-                'qty': r.qty,
-                'line_total': r.lineTotal,
-              })
+          .map(
+            (r) => {
+              'ticket_id': ticketId,
+              'item_id': r.selectedItemId,
+              'item_name_snapshot': r.itemNameSnapshot,
+              'unit_price_snapshot': r.unitPriceSnapshot,
+              'qty': r.qty,
+              'line_total': r.lineTotal,
+              'gst_percent_snapshot': r.gstPercentSnapshot ?? 0,
+              'hsn_sac_snapshot': r.hsnSacSnapshot ?? '',
+              'gst_inclusive_snapshot': r.gstInclusiveSnapshot,
+              'taxable_amount_snapshot': r.taxableAmount,
+              'gst_amount_snapshot': r.gstAmount,
+              'cgst_amount_snapshot': r.cgstAmount,
+              'sgst_amount_snapshot': r.sgstAmount,
+            },
+          )
           .toList();
 
       if (itemsToInsert.isNotEmpty) {
@@ -428,31 +443,28 @@ class _TicketCreatePageState extends State<TicketCreatePage> {
         );
       } catch (_) {}
 
-final settingsRows = await _supabase
-    .from('branch_settings')
-    .select('*');
+      final settingsRows = await _supabase.from('branch_settings').select('*');
 
-print('ALL SETTINGS = $settingsRows');
+      print('ALL SETTINGS = $settingsRows');
 
-final branchSettings = (settingsRows as List)
-    .firstWhere(
-      (r) => (r['branch_code'] ?? '').toString().trim().toUpperCase() ==
-          branchCode!.trim().toUpperCase(),
-      orElse: () => {},
-    );
+      final branchSettings = (settingsRows as List).firstWhere(
+        (r) =>
+            (r['branch_code'] ?? '').toString().trim().toUpperCase() ==
+            branchCode!.trim().toUpperCase(),
+        orElse: () => {},
+      );
 
-print('PDF Branch Code = ${branchCode!.trim().toUpperCase()}');
-print('PDF Branch Settings = $branchSettings');
+      print('PDF Branch Code = ${branchCode!.trim().toUpperCase()}');
+      print('PDF Branch Settings = $branchSettings');
 
-fullTicket['branch_settings'] = branchSettings ?? {};
+      fullTicket['branch_settings'] = branchSettings ?? {};
 
+      fullTicket['created_at'] = insertedTicket['created_at'];
+      fullTicket['ticket_date'] = insertedTicket['created_at'];
 
-fullTicket['created_at'] = insertedTicket['created_at'];
-fullTicket['ticket_date'] = insertedTicket['created_at'];
-
-final pdfDoc = await generateTicketPdf(
-  Map<String, dynamic>.from(fullTicket),
-);
+      final pdfDoc = await generateTicketPdf(
+        Map<String, dynamic>.from(fullTicket),
+      );
       await Printing.layoutPdf(onLayout: (_) async => pdfDoc.save());
 
       _toast('Ticket created: $ticketNo');
@@ -460,8 +472,10 @@ final pdfDoc = await generateTicketPdf(
       _resetFormOnly();
       rows.first.qtyCtl.text = '1';
       rows.first.qty = 1;
-      _previewTicketNo =
-          await _generateNextTicketNo(branchCode!, DateTime.now());
+      _previewTicketNo = await _generateNextTicketNo(
+        branchCode!,
+        DateTime.now(),
+      );
 
       if (mounted) {
         setState(() => _saving = false);
@@ -487,11 +501,8 @@ final pdfDoc = await generateTicketPdf(
       labelText: label,
       hintText: hint,
       isDense: true,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide(color: Colors.grey.shade300),
@@ -514,10 +525,7 @@ final pdfDoc = await generateTicketPdf(
             flex: 4,
             child: Text(
               'Ticket No: ${_previewTicketNo ?? "Loading..."}',
-              style: const TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 18,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
             ),
           ),
           Expanded(
@@ -676,10 +684,7 @@ final pdfDoc = await generateTicketPdf(
               alignment: Alignment.centerLeft,
               child: Text(
                 row.qtyError!,
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontSize: 11,
-                ),
+                style: const TextStyle(color: Colors.red, fontSize: 11),
               ),
             ),
           ],
@@ -752,7 +757,7 @@ final pdfDoc = await generateTicketPdf(
             children: [
               Text('Subtotal: ₹${subtotal.toStringAsFixed(2)}'),
               Text('Discount: ₹${discountAmount.toStringAsFixed(2)}'),
-              const Text('GST Inc. 18%'),
+              const Text('GST Included • Item-wise'),
               const SizedBox(height: 4),
               Text(
                 'Final: ₹${finalAmount.toStringAsFixed(2)}',
@@ -836,6 +841,9 @@ class _Line {
   String? selectedItemId;
   String? itemNameSnapshot;
   double? unitPriceSnapshot;
+  double? gstPercentSnapshot;
+  String? hsnSacSnapshot;
+  bool gstInclusiveSnapshot = true;
 
   final TextEditingController codeCtl = TextEditingController();
   final TextEditingController qtyCtl = TextEditingController(text: '1');
@@ -850,6 +858,24 @@ class _Line {
     final q = qty ?? 0;
     return (unitPriceSnapshot ?? 0.0) * q;
   }
+
+  double get taxableAmount {
+    final total = lineTotal ?? 0;
+    final gst = gstPercentSnapshot ?? 0;
+    if (!gstInclusiveSnapshot || gst <= 0) return total;
+    return total / (1 + (gst / 100));
+  }
+
+  double get gstAmount {
+    final total = lineTotal ?? 0;
+    if (!gstInclusiveSnapshot) {
+      return total * ((gstPercentSnapshot ?? 0) / 100);
+    }
+    return total - taxableAmount;
+  }
+
+  double get cgstAmount => gstAmount / 2;
+  double get sgstAmount => gstAmount / 2;
 
   void dispose() {
     codeCtl.dispose();

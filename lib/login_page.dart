@@ -41,10 +41,10 @@ class _LoginPageState extends State<LoginPage> {
       final supabase = Supabase.instance.client;
 
       final row = await supabase
-    .from('staff_users')
-    .select('username, password, role, branch_code')
-    .ilike('username', username)
-    .maybeSingle();
+          .from('staff_users')
+          .select('username, password, role, branch_code')
+          .ilike('username', username)
+          .maybeSingle();
 
       if (row == null) {
         throw Exception('User not found');
@@ -67,17 +67,14 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => HomePage(
-            username: username,
-            branch: openBranch,
-          ),
+          builder: (_) => HomePage(username: username, branch: openBranch),
         ),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Login failed: $e')));
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -100,10 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   const Text(
                     'Victory Accounting',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   const Text('Login to continue'),

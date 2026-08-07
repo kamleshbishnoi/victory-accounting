@@ -77,11 +77,7 @@ class _CommissionPageState extends State<CommissionPage> {
   Future<void> _loadAll() async {
     setState(() => _loading = true);
     try {
-      await Future.wait([
-        _loadTickets(),
-        _loadAgents(),
-        _loadRates(),
-      ]);
+      await Future.wait([_loadTickets(), _loadAgents(), _loadRates()]);
       await _loadRows();
     } catch (e) {
       _msg('Load error: $e');
@@ -142,7 +138,9 @@ class _CommissionPageState extends State<CommissionPage> {
       if (_selectedRateId == null && _rates.isNotEmpty) {
         Map<String, dynamic>? primary;
         try {
-          primary = _rates.firstWhere((e) => (e['is_primary'] ?? false) == true);
+          primary = _rates.firstWhere(
+            (e) => (e['is_primary'] ?? false) == true,
+          );
         } catch (_) {
           primary = _rates.first;
         }
@@ -203,7 +201,9 @@ class _CommissionPageState extends State<CommissionPage> {
       } else {
         Map<String, dynamic>? primary;
         try {
-          primary = _rates.firstWhere((e) => (e['is_primary'] ?? false) == true);
+          primary = _rates.firstWhere(
+            (e) => (e['is_primary'] ?? false) == true,
+          );
         } catch (_) {
           primary = _rates.isNotEmpty ? _rates.first : null;
         }
@@ -225,82 +225,89 @@ class _CommissionPageState extends State<CommissionPage> {
   }
 
   Future<void> _saveCommission({required bool paid}) async {
-  if (_selectedTicketId == null) {
-    _msg('Ticket select karo');
-    return;
-  }
-  if (_selectedAgentId == null) {
-    _msg('Agent select karo');
-    return;
-  }
-  if (_selectedRateId == null) {
-    _msg('Commission rate select karo');
-    return;
-  }
-
-  setState(() => _saving = true);
-
-  try {
-    final selectedTicket = _selectedTicket;
-    final oldPaid = (selectedTicket?['commission_paid'] ?? false) == true;
-
-    final agent = _agentById(_selectedAgentId);
-    final agentName = (agent?['agent_name'] ?? '').toString();
-    final ticketNo = (selectedTicket?['ticket_no'] ?? '').toString();
-
-    await supabase.from('tickets').update({
-      'agent_id': _selectedAgentId,
-      'commission_rate_id': _selectedRateId,
-      'commission_percent': _commissionPercent,
-      'commission_amount': _commissionAmount,
-      'commission_paid': paid,
-      'commission_paid_at': paid ? DateTime.now().toIso8601String() : null,
-    }).eq('id', _selectedTicketId!);
-
-    // sirf tab transaction entry banao jab pending se paid ho raha ho
-    if (!oldPaid && paid) {
-      await supabase.from('transactions').insert({
-        'branch_code': _branchCode,
-        'tx_date': DateTime.now().toIso8601String(),
-        'flow_type': 'OUT',
-        'category': 'Commission Paid',
-        'amount': _commissionAmount,
-        'note': 'Commission paid for $ticketNo',
-        'person_name': agentName,
-        'created_by': 'admin',
-        'payment_method': 'Cash',
-      });
+    if (_selectedTicketId == null) {
+      _msg('Ticket select karo');
+      return;
+    }
+    if (_selectedAgentId == null) {
+      _msg('Agent select karo');
+      return;
+    }
+    if (_selectedRateId == null) {
+      _msg('Commission rate select karo');
+      return;
     }
 
-    _msg(paid ? 'Commission paid saved' : 'Commission pending saved');
+    setState(() => _saving = true);
 
-    setState(() {
-      _selectedTicketId = null;
-      _selectedAgentId = null;
+    try {
+      final selectedTicket = _selectedTicket;
+      final oldPaid = (selectedTicket?['commission_paid'] ?? false) == true;
 
-      Map<String, dynamic>? primary;
-      try {
-        primary = _rates.firstWhere((e) => (e['is_primary'] ?? false) == true);
-      } catch (_) {
-        primary = _rates.isNotEmpty ? _rates.first : null;
+      final agent = _agentById(_selectedAgentId);
+      final agentName = (agent?['agent_name'] ?? '').toString();
+      final ticketNo = (selectedTicket?['ticket_no'] ?? '').toString();
+
+      await supabase
+          .from('tickets')
+          .update({
+            'agent_id': _selectedAgentId,
+            'commission_rate_id': _selectedRateId,
+            'commission_percent': _commissionPercent,
+            'commission_amount': _commissionAmount,
+            'commission_paid': paid,
+            'commission_paid_at': paid
+                ? DateTime.now().toIso8601String()
+                : null,
+          })
+          .eq('id', _selectedTicketId!);
+
+      // sirf tab transaction entry banao jab pending se paid ho raha ho
+      if (!oldPaid && paid) {
+        await supabase.from('transactions').insert({
+          'branch_code': _branchCode,
+          'tx_date': DateTime.now().toIso8601String(),
+          'flow_type': 'OUT',
+          'category': 'Commission Paid',
+          'amount': _commissionAmount,
+          'note': 'Commission paid for $ticketNo',
+          'person_name': agentName,
+          'created_by': 'admin',
+          'payment_method': 'Cash',
+        });
       }
 
-      _selectedRateId = primary?['id']?.toString();
-      _commissionPercent = _toDouble(primary?['commission_percent']);
-      _finalAmount = 0;
-      _commissionAmount = 0;
-      _commissionPaid = false;
-    });
+      _msg(paid ? 'Commission paid saved' : 'Commission pending saved');
 
-    await _loadAll();
-  } catch (e) {
-    _msg('Save error: $e');
-  }
+      setState(() {
+        _selectedTicketId = null;
+        _selectedAgentId = null;
 
-  if (mounted) {
-    setState(() => _saving = false);
+        Map<String, dynamic>? primary;
+        try {
+          primary = _rates.firstWhere(
+            (e) => (e['is_primary'] ?? false) == true,
+          );
+        } catch (_) {
+          primary = _rates.isNotEmpty ? _rates.first : null;
+        }
+
+        _selectedRateId = primary?['id']?.toString();
+        _commissionPercent = _toDouble(primary?['commission_percent']);
+        _finalAmount = 0;
+        _commissionAmount = 0;
+        _commissionPaid = false;
+      });
+
+      await _loadAll();
+    } catch (e) {
+      _msg('Save error: $e');
+    }
+
+    if (mounted) {
+      setState(() => _saving = false);
+    }
   }
-}
 
   Future<void> _pickFromDate() async {
     final d = await showDatePicker(
@@ -330,9 +337,7 @@ class _CommissionPageState extends State<CommissionPage> {
 
   void _msg(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   Map<String, dynamic>? _agentById(String? id) {
@@ -355,9 +360,11 @@ class _CommissionPageState extends State<CommissionPage> {
   double get _paidCommission {
     return _rows.fold(
       0.0,
-      (sum, e) => sum + (((e['commission_paid'] ?? false) == true)
-          ? _toDouble(e['commission_amount'])
-          : 0),
+      (sum, e) =>
+          sum +
+          (((e['commission_paid'] ?? false) == true)
+              ? _toDouble(e['commission_amount'])
+              : 0),
     );
   }
 
@@ -515,8 +522,9 @@ class _CommissionPageState extends State<CommissionPage> {
                 const Spacer(),
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        _commissionPaid ? Colors.green : Colors.orange,
+                    backgroundColor: _commissionPaid
+                        ? Colors.green
+                        : Colors.orange,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 18,
@@ -652,10 +660,14 @@ class _CommissionPageState extends State<CommissionPage> {
         return Card(
           color: paid ? Colors.green.shade50 : Colors.orange.shade50,
           elevation: 1,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 10,
+            ),
             title: Row(
               children: [
                 Expanded(
@@ -700,10 +712,7 @@ class _CommissionPageState extends State<CommissionPage> {
       appBar: AppBar(
         title: Text('Commission • ${widget.branchName} ($_branchCode)'),
         actions: [
-          IconButton(
-            onPressed: _loadAll,
-            icon: const Icon(Icons.refresh),
-          ),
+          IconButton(onPressed: _loadAll, icon: const Icon(Icons.refresh)),
         ],
       ),
       body: Padding(

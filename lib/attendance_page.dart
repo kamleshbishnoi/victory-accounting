@@ -35,9 +35,7 @@ class _AttendancePageState extends State<AttendancePage> {
 
   void _msg(String text) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(text)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
   String _fmtDate(DateTime d) {
@@ -190,7 +188,10 @@ class _AttendancePageState extends State<AttendancePage> {
       };
     }
 
-    if (inTime == null || inTime.isEmpty || outTime == null || outTime.isEmpty) {
+    if (inTime == null ||
+        inTime.isEmpty ||
+        outTime == null ||
+        outTime.isEmpty) {
       return {
         'status': 'Absent',
         'late_mark': false,
@@ -283,19 +284,27 @@ class _AttendancePageState extends State<AttendancePage> {
             'grace_minutes': _readAnyInt(s, ['grace_minutes'], 10),
             'paid_off_per_month': _readAnyInt(s, ['paid_off_per_month'], 2),
             'attendance_id': existing == null ? null : existing['id'],
-            'in_time': existing == null ? null : _fmtTimeString(existing['in_time']),
-            'out_time': existing == null ? null : _fmtTimeString(existing['out_time']),
+            'in_time': existing == null
+                ? null
+                : _fmtTimeString(existing['in_time']),
+            'out_time': existing == null
+                ? null
+                : _fmtTimeString(existing['out_time']),
             'status': existing == null
                 ? 'Pending'
                 : (existing['status'] ?? 'Pending').toString(),
-            'late_mark': existing == null ? false : (existing['late_mark'] == true),
+            'late_mark': existing == null
+                ? false
+                : (existing['late_mark'] == true),
             'worked_minutes': existing == null
                 ? 0
                 : _readAnyInt(existing, ['worked_minutes'], 0),
             'day_fraction': existing == null
                 ? 0.0
                 : _readAnyDouble(existing, ['day_fraction'], 0.0),
-            'remarks': existing == null ? '' : (existing['remarks'] ?? '').toString(),
+            'remarks': existing == null
+                ? ''
+                : (existing['remarks'] ?? '').toString(),
           };
         }).toList();
       }
@@ -334,10 +343,7 @@ class _AttendancePageState extends State<AttendancePage> {
       }
     }
 
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: initial,
-    );
+    final picked = await showTimePicker(context: context, initialTime: initial);
 
     if (picked == null) return null;
     return _timeOfDayToString(picked);
@@ -477,7 +483,8 @@ class _AttendancePageState extends State<AttendancePage> {
                     final dateStr = _fmtDate(_selectedDate);
 
                     final finalCalc = _calcStatus(
-                      shiftStart: (row['shift_start_time'] ?? '09:00').toString(),
+                      shiftStart: (row['shift_start_time'] ?? '09:00')
+                          .toString(),
                       inTime: inTime,
                       outTime: outTime,
                       graceMinutes: (row['grace_minutes'] ?? 10) as int,
@@ -487,8 +494,8 @@ class _AttendancePageState extends State<AttendancePage> {
                     String finalStatus = finalCalc['status'].toString();
                     bool finalLate = finalCalc['late_mark'] == true;
                     int finalWorked = finalCalc['worked_minutes'] as int;
-                    double finalFraction =
-                        (finalCalc['day_fraction'] as num).toDouble();
+                    double finalFraction = (finalCalc['day_fraction'] as num)
+                        .toDouble();
 
                     if (paidOff) {
                       final usedPaidOff = await _paidOffCountForMonth(row);
@@ -497,7 +504,9 @@ class _AttendancePageState extends State<AttendancePage> {
                         finalLate = false;
                         finalWorked = 0;
                         finalFraction = 0.0;
-                        _msg('2 paid off already use ho chuke hain. Ye Absent save hoga.');
+                        _msg(
+                          '2 paid off already use ho chuke hain. Ye Absent save hoga.',
+                        );
                       }
                     }
 
@@ -645,8 +654,9 @@ class _AttendancePageState extends State<AttendancePage> {
 
   Widget _summaryBar() {
     final total = _rows.length;
-    final done =
-        _rows.where((e) => (e['status'] ?? 'Pending') != 'Pending').length;
+    final done = _rows
+        .where((e) => (e['status'] ?? 'Pending') != 'Pending')
+        .length;
     final pending = total - done;
 
     return Container(
@@ -680,13 +690,46 @@ class _AttendancePageState extends State<AttendancePage> {
       ),
       child: const Row(
         children: [
-          Expanded(flex: 3, child: Text('Staff Name', style: TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(flex: 2, child: Text('Shift', style: TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(flex: 2, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(flex: 2, child: Text('In Time', style: TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(flex: 2, child: Text('Out Time', style: TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(flex: 1, child: Text('Late', style: TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(flex: 1, child: Text('Edit', style: TextStyle(fontWeight: FontWeight.bold))),
+          Expanded(
+            flex: 3,
+            child: Text(
+              'Staff Name',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text('Shift', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              'Status',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              'In Time',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              'Out Time',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Text('Late', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          Expanded(
+            flex: 1,
+            child: Text('Edit', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
     );
@@ -698,9 +741,7 @@ class _AttendancePageState extends State<AttendancePage> {
     }
 
     if (_rows.isEmpty) {
-      return const Center(
-        child: Text('No staff found for this branch'),
-      );
+      return const Center(child: Text('No staff found for this branch'));
     }
 
     return Column(
@@ -717,7 +758,10 @@ class _AttendancePageState extends State<AttendancePage> {
               final status = (e['status'] ?? 'Pending').toString();
 
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: _statusColor(status),
                   borderRadius: BorderRadius.circular(10),
@@ -734,7 +778,9 @@ class _AttendancePageState extends State<AttendancePage> {
                           Expanded(
                             child: Text(
                               (e['staff_name'] ?? '').toString(),
-                              style: const TextStyle(fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
@@ -742,11 +788,19 @@ class _AttendancePageState extends State<AttendancePage> {
                     ),
                     Expanded(
                       flex: 2,
-                      child: Text('${e['shift_start_time']} - ${e['shift_end_time']}'),
+                      child: Text(
+                        '${e['shift_start_time']} - ${e['shift_end_time']}',
+                      ),
                     ),
                     Expanded(flex: 2, child: Text(status)),
-                    Expanded(flex: 2, child: Text((e['in_time'] ?? '--:--').toString())),
-                    Expanded(flex: 2, child: Text((e['out_time'] ?? '--:--').toString())),
+                    Expanded(
+                      flex: 2,
+                      child: Text((e['in_time'] ?? '--:--').toString()),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Text((e['out_time'] ?? '--:--').toString()),
+                    ),
                     Expanded(
                       flex: 1,
                       child: Text((e['late_mark'] == true) ? 'Yes' : 'No'),

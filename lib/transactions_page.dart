@@ -100,9 +100,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
 
   void _msg(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   String _staffName(Map<String, dynamic> row) {
@@ -479,10 +477,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
           const SizedBox(height: 6),
           Text(
             value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 17,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
           ),
         ],
       ),
@@ -822,12 +817,11 @@ class _TransactionsPageState extends State<TransactionsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Transactions • $_branchCode • ${_dateOnly(_selectedDate)}'),
+        title: Text(
+          'Transactions • $_branchCode • ${_dateOnly(_selectedDate)}',
+        ),
         actions: [
-          IconButton(
-            onPressed: _loadAll,
-            icon: const Icon(Icons.refresh),
-          ),
+          IconButton(onPressed: _loadAll, icon: const Icon(Icons.refresh)),
         ],
       ),
       body: Padding(
@@ -844,10 +838,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                     const SizedBox(height: 12),
                     _buildClosingCard(),
                     const SizedBox(height: 12),
-                    SizedBox(
-                      height: 220,
-                      child: _buildEntryList(),
-                    ),
+                    SizedBox(height: 220, child: _buildEntryList()),
                   ],
                 ),
               ),

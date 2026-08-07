@@ -5,11 +5,7 @@ class StaffPage extends StatefulWidget {
   final String username;
   final String branch;
 
-  const StaffPage({
-    super.key,
-    required this.username,
-    required this.branch,
-  });
+  const StaffPage({super.key, required this.username, required this.branch});
 
   @override
   State<StaffPage> createState() => _StaffPageState();
@@ -46,9 +42,7 @@ class _StaffPageState extends State<StaffPage> {
 
   void _toast(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   double _toDouble(dynamic v) {
@@ -168,9 +162,7 @@ class _StaffPageState extends State<StaffPage> {
     final mobileCtl = TextEditingController(
       text: (row['mobile'] ?? '').toString(),
     );
-    final roleCtl = TextEditingController(
-      text: (row['role'] ?? '').toString(),
-    );
+    final roleCtl = TextEditingController(text: (row['role'] ?? '').toString());
     final salaryCtl = TextEditingController(
       text: _toDouble(row['salary']).toStringAsFixed(0),
     );

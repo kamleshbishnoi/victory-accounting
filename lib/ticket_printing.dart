@@ -4,8 +4,7 @@ import 'package:pdf/widgets.dart' as pw;
 Future<pw.Document> generateTicketPdf(Map<String, dynamic> ticket) async {
   final doc = pw.Document();
 
-  final settings =
-      Map<String, dynamic>.from(ticket['branch_settings'] ?? {});
+  final settings = Map<String, dynamic>.from(ticket['branch_settings'] ?? {});
 
   final branchCode = (ticket['branch_code'] ?? '').toString();
   final branchName = (settings['branch_name'] ?? branchCode).toString();
@@ -14,7 +13,8 @@ Future<pw.Document> generateTicketPdf(Map<String, dynamic> ticket) async {
   final address = (settings['address'] ?? '').toString();
   final phone = (settings['phone'] ?? '').toString();
   final terms = (settings['terms_conditions'] ?? '').toString();
-  final footer = (settings['ticket_footer'] ?? 'Thank you for visiting').toString();
+  final footer = (settings['ticket_footer'] ?? 'Thank you for visiting')
+      .toString();
   final parkingCopy = settings['parking_copy'] == true;
   print('PDF SETTINGS IN PRINT = $settings');
 
@@ -30,66 +30,59 @@ Future<pw.Document> generateTicketPdf(Map<String, dynamic> ticket) async {
   }
 
   DateTime dt() {
-  final rawCreated = (ticket['created_at'] ?? '').toString();
+    final rawCreated = (ticket['created_at'] ?? '').toString();
 
-  if (rawCreated.isNotEmpty) {
-    return DateTime.parse(rawCreated).toLocal();
+    if (rawCreated.isNotEmpty) {
+      return DateTime.parse(rawCreated).toLocal();
+    }
+
+    return DateTime.now();
   }
 
-  return DateTime.now();
-}
+  String dateText() {
+    final d = dt();
+    return '${d.day.toString().padLeft(2, '0')}-'
+        '${d.month.toString().padLeft(2, '0')}-'
+        '${d.year}';
+  }
 
-String dateText() {
-  final d = dt();
-  return '${d.day.toString().padLeft(2, '0')}-'
-      '${d.month.toString().padLeft(2, '0')}-'
-      '${d.year}';
-}
+  String timeText() {
+    final d = dt();
 
-String timeText() {
-  final d = dt();
+    int h = d.hour;
+    final m = d.minute.toString().padLeft(2, '0');
+    final ap = h >= 12 ? 'PM' : 'AM';
 
-  int h = d.hour;
-  final m = d.minute.toString().padLeft(2, '0');
-  final ap = h >= 12 ? 'PM' : 'AM';
+    if (h > 12) h -= 12;
+    if (h == 0) h = 12;
 
-  if (h > 12) h -= 12;
-  if (h == 0) h = 12;
-
-  return '$h:$m $ap';
-}
+    return '$h:$m $ap';
+  }
 
   pw.Widget mainSlip() {
+    final settings = (ticket['branch_settings'] is Map)
+        ? Map<String, dynamic>.from(ticket['branch_settings'])
+        : <String, dynamic>{};
 
-  final settings = (ticket['branch_settings'] is Map)
-      ? Map<String, dynamic>.from(ticket['branch_settings'])
-      : <String, dynamic>{};
+    final branch = (ticket['branch_code'] ?? '').toString();
 
-  final branch = (ticket['branch_code'] ?? '').toString();
+    final branchName = (settings['branch_name'] ?? branch).toString();
 
-  final branchName =
-      (settings['branch_name'] ?? branch).toString();
+    final companyName = (settings['company_name'] ?? '').toString();
 
-  final companyName =
-      (settings['company_name'] ?? '').toString();
+    final gstNo = (settings['gst_number'] ?? '').toString();
 
-  final gstNo =
-      (settings['gst_number'] ?? '').toString();
+    final address = (settings['address'] ?? '').toString();
 
-  final address =
-      (settings['address'] ?? '').toString();
+    final phone = (settings['phone'] ?? '').toString();
 
-  final phone =
-      (settings['phone'] ?? '').toString();
+    final terms = (settings['terms_conditions'] ?? '').toString();
 
-  final terms =
-      (settings['terms_conditions'] ?? '').toString();
+    final footer = (settings['ticket_footer'] ?? '').toString();
 
-  final footer =
-      (settings['ticket_footer'] ?? '').toString();
-
-  final ticketNo = (ticket['ticket_no'] ?? '').toString();
-    final payment = (ticket['payment_mode'] ?? ticket['payment_method'] ?? '').toString();
+    final ticketNo = (ticket['ticket_no'] ?? '').toString();
+    final payment = (ticket['payment_mode'] ?? ticket['payment_method'] ?? '')
+        .toString();
 
     final items = (ticket['ticket_items'] is List)
         ? List<Map<String, dynamic>>.from(ticket['ticket_items'] as List)
@@ -106,13 +99,13 @@ String timeText() {
           ),
         ),
         if (companyName.isNotEmpty)
-          pw.Center(child: pw.Text(companyName, textAlign: pw.TextAlign.center)),
-        if (gstNo.isNotEmpty)
-          pw.Center(child: pw.Text('GSTIN: $gstNo')),
+          pw.Center(
+            child: pw.Text(companyName, textAlign: pw.TextAlign.center),
+          ),
+        if (gstNo.isNotEmpty) pw.Center(child: pw.Text('GSTIN: $gstNo')),
         if (address.isNotEmpty)
           pw.Center(child: pw.Text(address, textAlign: pw.TextAlign.center)),
-        if (phone.isNotEmpty)
-          pw.Center(child: pw.Text('Phone: $phone')),
+        if (phone.isNotEmpty) pw.Center(child: pw.Text('Phone: $phone')),
         pw.SizedBox(height: 6),
 
         pw.Text('Customer: $payment'),
@@ -120,30 +113,41 @@ String timeText() {
         pw.Text('Date: ${dateText()}   Time: ${timeText()}'),
         pw.Divider(),
 
-        pw.Row(children: [
-          pw.SizedBox(width: 22, child: pw.Text('S.N.')),
-          pw.Expanded(child: pw.Text('Description')),
-          pw.SizedBox(width: 35, child: pw.Text('Rate')),
-          pw.SizedBox(width: 25, child: pw.Text('Qty')),
-          pw.SizedBox(width: 40, child: pw.Text('Amt')),
-        ]),
+        pw.Row(
+          children: [
+            pw.SizedBox(width: 22, child: pw.Text('Sr')),
+            pw.Expanded(child: pw.Text('Description')),
+            pw.SizedBox(width: 35, child: pw.Text('Rate')),
+            pw.SizedBox(width: 25, child: pw.Text('Qty')),
+            pw.SizedBox(width: 40, child: pw.Text('Amt')),
+          ],
+        ),
         pw.Divider(),
 
         ...items.asMap().entries.map((e) {
           final i = e.key + 1;
           final it = e.value;
-          final name = (it['item_name_snapshot'] ?? it['item_name'] ?? '').toString();
+          final name = (it['item_name_snapshot'] ?? it['item_name'] ?? '')
+              .toString();
           final qty = (it['qty'] ?? 0).toString();
           final rate = money(it['unit_price_snapshot']);
           final line = money(it['line_total']);
 
-          return pw.Row(children: [
-            pw.SizedBox(width: 22, child: pw.Text('$i')),
-            pw.Expanded(child: pw.Text(name)),
-            pw.SizedBox(width: 35, child: pw.Text(rate.replaceAll('Rs. ', ''))),
-            pw.SizedBox(width: 25, child: pw.Text(qty)),
-            pw.SizedBox(width: 40, child: pw.Text(line.replaceAll('Rs. ', ''))),
-          ]);
+          return pw.Row(
+            children: [
+              pw.SizedBox(width: 22, child: pw.Text('$i')),
+              pw.Expanded(child: pw.Text(name)),
+              pw.SizedBox(
+                width: 35,
+                child: pw.Text(rate.replaceAll('Rs. ', '')),
+              ),
+              pw.SizedBox(width: 25, child: pw.Text(qty)),
+              pw.SizedBox(
+                width: 40,
+                child: pw.Text(line.replaceAll('Rs. ', '')),
+              ),
+            ],
+          );
         }),
 
         pw.Divider(),
@@ -153,55 +157,64 @@ String timeText() {
         ),
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [pw.Text('Discount'), pw.Text(money(ticket['discount_amount']))],
+          children: [
+            pw.Text('Discount'),
+            pw.Text(money(ticket['discount_amount'])),
+          ],
         ),
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
-            pw.Text('Gross Total', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-            pw.Text(money(ticket['final_amount']),
-                style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+            pw.Text(
+              'Gross Total',
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            ),
+            pw.Text(
+              money(ticket['final_amount']),
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            ),
           ],
         ),
 
-       pw.SizedBox(height: 6),
-pw.Center(child: pw.Text('GST Included')),
+        pw.SizedBox(height: 6),
+        pw.Center(child: pw.Text('GST Included')),
 
-if (terms.isNotEmpty) ...[
-  pw.SizedBox(height: 6),
-  pw.Text('Terms & Conditions',
-      style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
-  pw.Text(terms, style: const pw.TextStyle(fontSize: 8)),
-],
+        if (terms.isNotEmpty) ...[
+          pw.SizedBox(height: 6),
+          pw.Text(
+            'Terms & Conditions',
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9),
+          ),
+          pw.Text(terms, style: const pw.TextStyle(fontSize: 8)),
+        ],
 
-if (footer.isNotEmpty) ...[
-  pw.SizedBox(height: 4),
-  pw.Center(child: pw.Text(footer, style: const pw.TextStyle(fontSize: 9))),
-],
+        if (footer.isNotEmpty) ...[
+          pw.SizedBox(height: 4),
+          pw.Center(
+            child: pw.Text(footer, style: const pw.TextStyle(fontSize: 9)),
+          ),
+        ],
       ],
     );
   }
 
   pw.Widget parkingSlip() {
-  return pw.Center(
-    child: pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.center,
-      children: [
-        pw.Text(
-          'PARKING',
-          style: pw.TextStyle(
-            fontSize: 24,
-            fontWeight: pw.FontWeight.bold,
+    return pw.Center(
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.center,
+        children: [
+          pw.Text(
+            'PARKING',
+            style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
           ),
-        ),
-        pw.SizedBox(height: 8),
-        pw.Text('Ticket No: ${ticket['ticket_no'] ?? ''}'),
-        pw.Text('Date: ${dateText()}'),
-        pw.Text('Time: ${timeText()}'),
-      ],
-    ),
-  );
-}
+          pw.SizedBox(height: 8),
+          pw.Text('Ticket No: ${ticket['ticket_no'] ?? ''}'),
+          pw.Text('Date: ${dateText()}'),
+          pw.Text('Time: ${timeText()}'),
+        ],
+      ),
+    );
+  }
 
   doc.addPage(pw.Page(pageFormat: pageFormat, build: (_) => mainSlip()));
 

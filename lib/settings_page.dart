@@ -6,11 +6,7 @@ class SettingsPage extends StatelessWidget {
   final String username;
   final String branch;
 
-  const SettingsPage({
-    super.key,
-    required this.username,
-    required this.branch,
-  });
+  const SettingsPage({super.key, required this.username, required this.branch});
 
   Future<bool> _confirm(BuildContext context, String msg) async {
     final result = await showDialog<bool>(
@@ -20,8 +16,14 @@ class SettingsPage extends StatelessWidget {
           title: const Text('Confirm'),
           content: Text(msg),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Yes')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Yes'),
+            ),
           ],
         );
       },
@@ -61,9 +63,14 @@ class SettingsPage extends StatelessWidget {
                     ListTile(
                       leading: const Icon(Icons.delete_outline),
                       title: const Text('Clear Transactions'),
-                      subtitle: const Text('Delete all transactions for this branch'),
+                      subtitle: const Text(
+                        'Delete all transactions for this branch',
+                      ),
                       onTap: () async {
-                        final ok = await _confirm(context, 'Clear all transactions for "$branch"?');
+                        final ok = await _confirm(
+                          context,
+                          'Clear all transactions for "$branch"?',
+                        );
                         if (!ok) return;
                         await Storage.clearTransactions(branch);
                         if (!context.mounted) return;
@@ -76,7 +83,10 @@ class SettingsPage extends StatelessWidget {
                       title: const Text('Clear Staff'),
                       subtitle: const Text('Delete all staff for this branch'),
                       onTap: () async {
-                        final ok = await _confirm(context, 'Clear all staff for "$branch"?');
+                        final ok = await _confirm(
+                          context,
+                          'Clear all staff for "$branch"?',
+                        );
                         if (!ok) return;
                         await Storage.clearStaff(branch);
                         if (!context.mounted) return;
@@ -85,27 +95,34 @@ class SettingsPage extends StatelessWidget {
                     ),
                     const Divider(height: 1),
                     ListTile(
-  leading: const Icon(Icons.percent),
-  title: const Text('Commission Settings'),
-  subtitle: const Text('Default rate, branch-wise commission %'),
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CommissionSettingsPage(
-          branchCode: branch,
-          branchName: branch,
-        ),
-      ),
-    );
-  },
-),
+                      leading: const Icon(Icons.percent),
+                      title: const Text('Commission Settings'),
+                      subtitle: const Text(
+                        'Default rate, branch-wise commission %',
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => CommissionSettingsPage(
+                              branchCode: branch,
+                              branchName: branch,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                     ListTile(
                       leading: const Icon(Icons.delete_outline),
                       title: const Text('Clear Attendance'),
-                      subtitle: const Text('Delete all attendance for this branch'),
+                      subtitle: const Text(
+                        'Delete all attendance for this branch',
+                      ),
                       onTap: () async {
-                        final ok = await _confirm(context, 'Clear all attendance for "$branch"?');
+                        final ok = await _confirm(
+                          context,
+                          'Clear all attendance for "$branch"?',
+                        );
                         if (!ok) return;
                         await Storage.clearAttendance(branch);
                         if (!context.mounted) return;
@@ -118,7 +135,10 @@ class SettingsPage extends StatelessWidget {
                       title: const Text('Clear ALL data'),
                       subtitle: const Text('Transactions + Staff + Attendance'),
                       onTap: () async {
-                        final ok = await _confirm(context, 'Clear ALL data for "$branch"?');
+                        final ok = await _confirm(
+                          context,
+                          'Clear ALL data for "$branch"?',
+                        );
                         if (!ok) return;
                         await Storage.clearAllForBranch(branch);
                         if (!context.mounted) return;

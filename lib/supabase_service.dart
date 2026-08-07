@@ -10,10 +10,7 @@ class SupabaseService {
 
   /// Call the RPC that marks a ticket printed once.
   Future<void> markTicketPrinted(String ticketId) async {
-    final res = await _client.rpc('mark_ticket_printed', params: {'p_ticket_id': ticketId}).execute();
-    if (res.error != null) {
-      throw res.error!;
-    }
+    await _client.rpc('mark_ticket_printed', params: {'p_ticket_id': ticketId});
   }
 
   // ...existing code...

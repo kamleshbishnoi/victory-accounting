@@ -25,7 +25,9 @@ class Storage {
   }
 
   // ---------- Transactions ----------
-  static Future<List<Map<String, dynamic>>> readTransactions(String branch) async {
+  static Future<List<Map<String, dynamic>>> readTransactions(
+    String branch,
+  ) async {
     final sp = await SharedPreferences.getInstance();
     final raw = sp.getString(keyTransactions(branch));
     if (raw == null || raw.isEmpty) return <Map<String, dynamic>>[];
@@ -33,12 +35,18 @@ class Storage {
     return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
   }
 
-  static Future<void> saveTransactions(String branch, List<Map<String, dynamic>> list) async {
+  static Future<void> saveTransactions(
+    String branch,
+    List<Map<String, dynamic>> list,
+  ) async {
     final sp = await SharedPreferences.getInstance();
     await sp.setString(keyTransactions(branch), jsonEncode(list));
   }
 
-  static Future<void> addTransaction(String branch, Map<String, dynamic> item) async {
+  static Future<void> addTransaction(
+    String branch,
+    Map<String, dynamic> item,
+  ) async {
     final list = await readTransactions(branch);
     list.insert(0, item);
     await saveTransactions(branch, list);
@@ -58,7 +66,10 @@ class Storage {
     return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
   }
 
-  static Future<void> saveStaff(String branch, List<Map<String, dynamic>> list) async {
+  static Future<void> saveStaff(
+    String branch,
+    List<Map<String, dynamic>> list,
+  ) async {
     final sp = await SharedPreferences.getInstance();
     await sp.setString(keyStaff(branch), jsonEncode(list));
   }
@@ -75,7 +86,9 @@ class Storage {
   }
 
   // ---------- Attendance ----------
-  static Future<List<Map<String, dynamic>>> readAttendance(String branch) async {
+  static Future<List<Map<String, dynamic>>> readAttendance(
+    String branch,
+  ) async {
     final sp = await SharedPreferences.getInstance();
     final raw = sp.getString(keyAttendance(branch));
     if (raw == null || raw.isEmpty) return <Map<String, dynamic>>[];
@@ -83,12 +96,18 @@ class Storage {
     return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
   }
 
-  static Future<void> saveAttendance(String branch, List<Map<String, dynamic>> list) async {
+  static Future<void> saveAttendance(
+    String branch,
+    List<Map<String, dynamic>> list,
+  ) async {
     final sp = await SharedPreferences.getInstance();
     await sp.setString(keyAttendance(branch), jsonEncode(list));
   }
 
-  static Future<void> addAttendance(String branch, Map<String, dynamic> item) async {
+  static Future<void> addAttendance(
+    String branch,
+    Map<String, dynamic> item,
+  ) async {
     final list = await readAttendance(branch);
     list.insert(0, item);
     await saveAttendance(branch, list);

@@ -113,7 +113,7 @@ class _ItemsPageState extends State<ItemsPage> {
 
       final list = await supabase
           .from('items')
-          .select('id, code, name, price, is_active, branch_id, created_at')
+          .select('id, code, name, price, gst_percent, hsn_sac, gst_inclusive, is_active, branch_id, created_at')
           .eq('branch_id', branchId)
           .order('code', ascending: true);
 
@@ -173,9 +173,19 @@ class _ItemsPageState extends State<ItemsPage> {
     final priceCtl = TextEditingController(
       text: (existing?['price'] ?? 0).toString(),
     );
+    final gstCtl = TextEditingController(
+      text: (existing?['gst_percent'] ?? 18).toString(),
+    );
+    final hsnCtl = TextEditingController(
+      text: (existing?['hsn_sac'] ?? '').toString(),
+    );
+    bool gstInclusive = existing?['gst_inclusive'] == null
+        ? true
+        : existing?['gst_inclusive'] == true;
 
-    bool isActive =
-        existing?['is_active'] == null ? true : (existing?['is_active'] as bool);
+    bool isActive = existing?['is_active'] == null
+        ? true
+        : (existing?['is_active'] as bool);
 
     await showDialog(
       context: context,
@@ -217,6 +227,31 @@ class _ItemsPageState extends State<ItemsPage> {
                   ),
                 ),
                 const SizedBox(height: 10),
+                TextField(
+                  controller: gstCtl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: 'GST %',
+                    hintText: 'Example: 5, 12, 18',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: hsnCtl,
+                  decoration: const InputDecoration(
+                    labelText: 'HSN / SAC Code',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                SwitchListTile(
+                  value: gstInclusive,
+                  onChanged: (v) => setD(() => gstInclusive = v),
+                  title: const Text('Price includes GST'),
+                  subtitle: const Text('Customer ticket rate will remain the same'),
+                  contentPadding: EdgeInsets.zero,
+                ),
                 SwitchListTile(
                   value: isActive,
                   onChanged: (v) => setD(() => isActive = v),
@@ -236,6 +271,8 @@ class _ItemsPageState extends State<ItemsPage> {
                 final code = codeCtl.text.trim();
                 final name = nameCtl.text.trim();
                 final price = double.tryParse(priceCtl.text.trim()) ?? 0;
+                final gstPercent = double.tryParse(gstCtl.text.trim()) ?? 0;
+                final hsnSac = hsnCtl.text.trim();
 
                 if (code.isEmpty) {
                   _toast('Item code required');
@@ -247,6 +284,10 @@ class _ItemsPageState extends State<ItemsPage> {
                 }
                 if (price <= 0) {
                   _toast('Price 0 se zyada hona chahiye');
+                  return;
+                }
+                if (gstPercent < 0 || gstPercent > 100) {
+                  _toast('GST % 0 se 100 ke beech hona chahiye');
                   return;
                 }
 
@@ -267,6 +308,9 @@ class _ItemsPageState extends State<ItemsPage> {
                       'code': code,
                       'name': name,
                       'price': price,
+                      'gst_percent': gstPercent,
+                      'hsn_sac': hsnSac,
+                      'gst_inclusive': gstInclusive,
                       'is_active': isActive,
                     });
                   } else {
@@ -276,6 +320,9 @@ class _ItemsPageState extends State<ItemsPage> {
                           'code': code,
                           'name': name,
                           'price': price,
+                          'gst_percent': gstPercent,
+                          'hsn_sac': hsnSac,
+                          'gst_inclusive': gstInclusive,
                           'is_active': isActive,
                         })
                         .eq('id', existing['id'])
@@ -314,6 +361,9 @@ class _ItemsPageState extends State<ItemsPage> {
     final name = (it['name'] ?? '').toString();
     final price = (it['price'] ?? 0).toString();
     final active = it['is_active'] == true;
+    final gst = (it['gst_percent'] ?? 0).toString();
+    final hsn = (it['hsn_sac'] ?? '').toString();
+    final inclusive = it['gst_inclusive'] != false;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -326,7 +376,10 @@ class _ItemsPageState extends State<ItemsPage> {
           children: [
             if (code.isNotEmpty)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.blueGrey.shade50,
                   borderRadius: BorderRadius.circular(20),
@@ -336,15 +389,15 @@ class _ItemsPageState extends State<ItemsPage> {
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
-            Text(
-              name,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
+            Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
           ],
         ),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 6),
-          child: Text('₹$price • ${active ? "Active" : "Inactive"}'),
+          child: Text(
+            '₹$price • GST $gst% ${inclusive ? "Included" : "Extra"}'
+            '${hsn.isEmpty ? "" : " • HSN/SAC $hsn"} • ${active ? "Active" : "Inactive"}',
+          ),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -384,21 +437,19 @@ class _ItemsPageState extends State<ItemsPage> {
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : branchId == null
-              ? const Center(child: Text('Branch not configured'))
-              : items.isEmpty
-                  ? const Center(
-                      child: Text('No items yet. + दबाकर item add करो.'),
-                    )
-                  : Column(
-                      children: [
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: items.length,
-                            itemBuilder: (_, i) => _itemCard(items[i]),
-                          ),
-                        ),
-                      ],
-                    ),
+          ? const Center(child: Text('Branch not configured'))
+          : items.isEmpty
+          ? const Center(child: Text('No items yet. + दबाकर item add करो.'))
+          : Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: items.length,
+                    itemBuilder: (_, i) => _itemCard(items[i]),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }

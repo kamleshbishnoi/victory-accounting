@@ -5,18 +5,18 @@ class BranchesPage extends StatelessWidget {
   const BranchesPage({super.key});
 
   static const List<String> branches = <String>[
-  'vcc',
-  'udaipur',
-  'jaipur',
-  'mount abu',
-  'jaisalmer',
-  'illusion',
-];
+    'vcc',
+    'udaipur',
+    'jaipur',
+    'mount abu',
+    'jaisalmer',
+    'illusion',
+  ];
 
   String _label(String b) {
-  if (b.toLowerCase() == 'vcc') return 'Victory Control Center';
-  return b;
-}
+    if (b.toLowerCase() == 'vcc') return 'Victory Control Center';
+    return b;
+  }
 
   Future<void> _select(BuildContext context, String branch) async {
     await Storage.setSelectedBranch(branch);
@@ -37,8 +37,8 @@ class BranchesPage extends StatelessWidget {
           return ListTile(
             title: Text(_label(b)),
             subtitle: Text(
-  'ID: ${b.toLowerCase() == 'vcc' ? 'VCC' : 'B$index'}',
-),
+              'ID: ${b.toLowerCase() == 'vcc' ? 'VCC' : 'B$index'}',
+            ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _select(context, b),
           );
