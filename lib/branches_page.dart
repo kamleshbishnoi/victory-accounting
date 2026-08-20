@@ -5,13 +5,15 @@ class BranchesPage extends StatelessWidget {
   const BranchesPage({super.key});
 
   static const List<String> branches = <String>[
-    'vcc',
-    'udaipur',
-    'jaipur',
-    'mount abu',
-    'jaisalmer',
-    'illusion',
-  ];
+  'vcc',
+  'udaipur',
+  'jaipur',
+  'mount abu',
+  'jaisalmer',
+  'illusion',
+  'mayalok',
+  'nathdwara',
+];
 
   String _label(String b) {
     if (b.toLowerCase() == 'vcc') return 'Victory Control Center';

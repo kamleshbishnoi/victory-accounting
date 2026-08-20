@@ -462,10 +462,55 @@ class _TicketCreatePageState extends State<TicketCreatePage> {
       fullTicket['created_at'] = insertedTicket['created_at'];
       fullTicket['ticket_date'] = insertedTicket['created_at'];
 
-      final pdfDoc = await generateTicketPdf(
-        Map<String, dynamic>.from(fullTicket),
+      final printTicket = Map<String, dynamic>.from(fullTicket);
+
+      // 1) Main ticket
+      final pdfDoc = await generateTicketPdf(printTicket);
+      await Printing.layoutPdf(
+        name: 'Ticket $ticketNo',
+        onLayout: (_) async => pdfDoc.save(),
       );
-      await Printing.layoutPdf(onLayout: (_) async => pdfDoc.save());
+
+      // 2) Parking as a separate user-triggered print job.
+      // Browsers can suppress/replace consecutive automatic print dialogs,
+      // so we show a button after the main ticket print finishes.
+      final normalizedBranch = branchCode!.trim().toUpperCase();
+      final parkingEnabled =
+          (branchSettings['parking_copy'] == true) &&
+          normalizedBranch != 'MAY' &&
+          normalizedBranch != 'NAT';
+
+      if (parkingEnabled && mounted) {
+        final shouldPrintParking = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Parking Slip'),
+            content: const Text(
+              'Main ticket print complete hone ke baad Parking Slip print karo.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Skip'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                icon: const Icon(Icons.print),
+                label: const Text('Print Parking'),
+              ),
+            ],
+          ),
+        );
+
+        if (shouldPrintParking == true) {
+          final parkingDoc = await generateParkingPdf(printTicket);
+          await Printing.layoutPdf(
+            name: 'Parking $ticketNo',
+            onLayout: (_) async => parkingDoc.save(),
+          );
+        }
+      }
 
       _toast('Ticket created: $ticketNo');
 

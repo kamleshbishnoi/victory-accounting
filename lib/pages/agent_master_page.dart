@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
 
 class AgentMasterPage extends StatefulWidget {
   final String branchCode;
@@ -82,6 +83,68 @@ class _AgentMasterPageState extends State<AgentMasterPage> {
     }
 
     return 'AG${(maxNo + 1).toString().padLeft(3, '0')}';
+  }
+
+
+  Future<bool> _captureMantraFingerprint() async {
+    const url = 'https://127.0.0.1:11100/rd/capture';
+
+    const pidOptions = '''<PidOptions ver="1.0">
+  <Opts fCount="1"
+        fType="2"
+        iCount="0"
+        pCount="0"
+        format="0"
+        pidVer="2.0"
+        timeout="10000"
+        otp=""
+        posh="UNKNOWN"
+        env="P"
+        wadh="" />
+</PidOptions>''';
+
+    try {
+      _showMsg('Scanner ready... finger sensor par rakho.');
+
+      final request = http.Request('CAPTURE', Uri.parse(url))
+        ..headers['Content-Type'] = 'text/xml'
+        ..body = pidOptions;
+
+      final streamed = await request.send().timeout(
+        const Duration(seconds: 20),
+      );
+
+      final body = await streamed.stream.bytesToString();
+
+      final respMatch = RegExp(
+        r'<Resp[^>]*errCode="([^"]*)"[^>]*errInfo="([^"]*)"',
+        caseSensitive: false,
+      ).firstMatch(body);
+
+      final errCode = respMatch?.group(1) ?? '';
+      final errInfo = respMatch?.group(2) ?? '';
+
+      if (streamed.statusCode >= 200 &&
+          streamed.statusCode < 300 &&
+          errCode == '0') {
+        _showMsg('Fingerprint capture successful.');
+        return true;
+      }
+
+      if (errInfo.isNotEmpty) {
+        _showMsg('Fingerprint capture failed: $errInfo ($errCode)');
+      } else {
+        _showMsg(
+          'Mantra response error. HTTP ${streamed.statusCode}',
+        );
+      }
+      return false;
+    } on Exception catch (e) {
+      _showMsg(
+        'Mantra connect error: $e. Windows PC par Mantra L1 AVDM running hona chahiye.',
+      );
+      return false;
+    }
   }
 
   Future<void> _openAgentForm({Map<String, dynamic>? agent}) async {
@@ -220,10 +283,8 @@ class _AgentMasterPageState extends State<AgentMasterPage> {
                               child: OutlinedButton.icon(
                                 onPressed: !isEdit
                                     ? null
-                                    : () {
-                                        _showMsg(
-                                          'Agent saved hai. Mantra fingerprint enrollment integration ke liye ready.',
-                                        );
+                                    : () async {
+                                        await _captureMantraFingerprint();
                                       },
                                 icon: const Icon(Icons.fingerprint),
                                 label: Text(

@@ -372,7 +372,7 @@ class _CommissionPageState extends State<CommissionPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: Colors.purple.shade100,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade300),
       ),
@@ -400,9 +400,9 @@ class _CommissionPageState extends State<CommissionPage> {
   Widget _buildFormCard() {
     return Card(
       elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(4),
         child: Column(
           children: [
             Row(
@@ -456,6 +456,11 @@ class _CommissionPageState extends State<CommissionPage> {
                     value: _selectedRateId,
                     decoration: const InputDecoration(
                       labelText: 'Commission %',
+                      labelStyle: TextStyle(fontSize: 18),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 18,
+                      ),
                       border: OutlineInputBorder(),
                     ),
                     items: _rates.map((r) {
@@ -473,33 +478,43 @@ class _CommissionPageState extends State<CommissionPage> {
                     onChanged: _onRateChanged,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: TextFormField(
-                    key: ValueKey('fa_${_finalAmount.toStringAsFixed(2)}'),
+                    key: ValueKey('fa_${_finalAmount.toStringAsFixed(3)}'),
                     initialValue: _fmt(_finalAmount),
                     readOnly: true,
                     decoration: const InputDecoration(
                       labelText: 'Final Amount',
+                      labelStyle: TextStyle(fontSize: 18),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 18,
+                      ),
                       border: OutlineInputBorder(),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 13),
                 Expanded(
                   child: TextFormField(
-                    key: ValueKey('ca_${_commissionAmount.toStringAsFixed(2)}'),
+                    key: ValueKey('ca_${_commissionAmount.toStringAsFixed(3)}'),
                     initialValue: _fmt(_commissionAmount),
                     readOnly: true,
                     decoration: const InputDecoration(
                       labelText: 'Commission Amount',
+                      labelStyle: TextStyle(fontSize: 18),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 18,
+                      ),
                       border: OutlineInputBorder(),
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             Row(
               children: [
                 ChoiceChip(
@@ -527,11 +542,11 @@ class _CommissionPageState extends State<CommissionPage> {
                         : Colors.orange,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 14,
+                      horizontal: 8,
+                      vertical: 6,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                   onPressed: _saving
@@ -555,12 +570,12 @@ class _CommissionPageState extends State<CommissionPage> {
   Widget _buildFilterCard() {
     return Card(
       elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(4),
         child: Wrap(
-          spacing: 12,
-          runSpacing: 12,
+          spacing: 4,
+          runSpacing: 4,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             OutlinedButton.icon(
@@ -618,7 +633,7 @@ class _CommissionPageState extends State<CommissionPage> {
 
   Widget _statusBox(bool paid) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
         color: paid ? Colors.green.shade100 : Colors.orange.shade100,
         borderRadius: BorderRadius.circular(20),
@@ -644,7 +659,7 @@ class _CommissionPageState extends State<CommissionPage> {
 
     return ListView.separated(
       itemCount: _rows.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      separatorBuilder: (_, __) => const SizedBox(height: 6),
       itemBuilder: (context, index) {
         final r = _rows[index];
         final ticketNo = (r['ticket_no'] ?? '').toString();
@@ -661,28 +676,28 @@ class _CommissionPageState extends State<CommissionPage> {
           color: paid ? Colors.green.shade50 : Colors.orange.shade50,
           elevation: 1,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(2),
           ),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 10,
+              horizontal: 2,
+              vertical: 2,
             ),
             title: Row(
               children: [
                 Expanded(
                   child: Text(
                     '$ticketNo  |  ₹$finalAmt  |  Comm: ₹$amount',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+                    style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
                 ),
                 _statusBox(paid),
               ],
             ),
             subtitle: Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.only(top: 2),
               child: Text(
-                'Agent: $agentName ($agentCode)\nPercent: $percent %',
+                'Agent: $agentName ($agentCode)   |   Percent: $percent %',
               ),
             ),
             trailing: IconButton(
@@ -716,15 +731,15 @@ class _CommissionPageState extends State<CommissionPage> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(4),
         child: Column(
           children: [
             _buildSummaryCard(),
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
             _buildFormCard(),
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
             _buildFilterCard(),
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
             Expanded(child: _buildList()),
           ],
         ),
