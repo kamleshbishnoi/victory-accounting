@@ -12,6 +12,7 @@ import 'storage.dart';
 import 'ticket_create_page.dart';
 import 'transactions_page.dart';
 import 'items_page.dart';
+import 'addon_module_page.dart';
 
 import 'pages/agents_page.dart';
 import 'pages/agent_master_page.dart';
@@ -44,6 +45,7 @@ class _HomePageState extends State<HomePage> {
   late String _branch;
   bool _loadingBranch = true;
   bool _isAdminUser = false;
+  String _accessType = 'NORMAL';
 
   bool get _isControlCenterMode => _branch == 'ALL';
 
@@ -69,19 +71,22 @@ class _HomePageState extends State<HomePage> {
     try {
       final row = await _supabase
           .from('staff_users')
-          .select('role, branch_code')
+          .select('role, branch_code, access_type')
           .eq('username', widget.username.trim().toLowerCase())
           .single();
 
       final role = (row['role'] ?? '').toString().toUpperCase();
       final branchCode = (row['branch_code'] ?? '').toString().toUpperCase();
+      final accessType = (row['access_type'] ?? 'NORMAL').toString().toUpperCase();
 
+      _accessType = accessType;
       _isAdminUser = role == 'ADMIN';
       _branch = _isAdminUser ? 'ALL' : _normalizeBranch(branchCode);
 
       await Storage.setSelectedBranch(_branch);
     } catch (e) {
       _isAdminUser = false;
+      _accessType = 'NORMAL';
       _branch = _normalizeBranch(widget.branch);
     }
 
@@ -150,6 +155,61 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<_DashItem> get _dashboardItems {
+    // Dedicated JPR floor users: only their own module.
+    if (_accessType == 'PHOTO' || _accessType == 'VR') {
+      final dept = _accessType;
+      return <_DashItem>[
+        _DashItem(
+          title: '$dept Items',
+          icon: Icons.inventory_2,
+          onTap: () => _go(
+            AddonModulePage(
+              username: widget.username,
+              branchCode: 'JPR',
+              department: dept,
+              initialTab: 0,
+            ),
+          ),
+        ),
+        _DashItem(
+          title: '$dept Sale',
+          icon: Icons.point_of_sale,
+          onTap: () => _go(
+            AddonModulePage(
+              username: widget.username,
+              branchCode: 'JPR',
+              department: dept,
+              initialTab: 1,
+            ),
+          ),
+        ),
+        _DashItem(
+          title: '$dept Report',
+          icon: Icons.receipt_long,
+          onTap: () => _go(
+            AddonModulePage(
+              username: widget.username,
+              branchCode: 'JPR',
+              department: dept,
+              initialTab: 2,
+            ),
+          ),
+        ),
+        _DashItem(
+          title: '$dept Summary',
+          icon: Icons.bar_chart,
+          onTap: () => _go(
+            AddonModulePage(
+              username: widget.username,
+              branchCode: 'JPR',
+              department: dept,
+              initialTab: 3,
+            ),
+          ),
+        ),
+      ];
+    }
+
     if (_isControlCenterMode) {
       return <_DashItem>[
         _DashItem(
@@ -172,6 +232,30 @@ class _HomePageState extends State<HomePage> {
           title: 'Ticket Report Monitor',
           icon: Icons.list_alt,
           onTap: () => _go(AdminTicketReportPage()),
+        ),
+        _DashItem(
+          title: 'JPR Photo',
+          icon: Icons.photo_camera,
+          onTap: () => _go(
+            AddonModulePage(
+              username: widget.username,
+              branchCode: 'JPR',
+              department: 'PHOTO',
+              management: true,
+            ),
+          ),
+        ),
+        _DashItem(
+          title: 'JPR VR',
+          icon: Icons.vrpano,
+          onTap: () => _go(
+            AddonModulePage(
+              username: widget.username,
+              branchCode: 'JPR',
+              department: 'VR',
+              management: true,
+            ),
+          ),
         ),
         _DashItem(
           title: 'Attendance Monitor',
@@ -203,7 +287,7 @@ class _HomePageState extends State<HomePage> {
       ];
     }
 
-    return <_DashItem>[
+    final items = <_DashItem>[
       _DashItem(
         title: 'Ticket',
         icon: Icons.confirmation_number,
@@ -228,7 +312,7 @@ class _HomePageState extends State<HomePage> {
             _go(ReportsPage(username: widget.username, branch: _branch)),
       ),
       _DashItem(
-        title: 'Ticket Report (Admin)',
+        title: 'Ticket Report',
         icon: Icons.list_alt,
         onTap: () =>
             _go(TicketReportPage(username: widget.username, branch: _branch)),
@@ -249,36 +333,81 @@ class _HomePageState extends State<HomePage> {
         icon: Icons.currency_rupee,
         onTap: () => _go(SalaryPage(branch: _branch)),
       ),
-      _DashItem(
-        title: 'Agents',
-        icon: Icons.groups,
-        onTap: () => _go(AgentsPage(branchCode: _branch)),
-      ),
-      _DashItem(
-        title: 'Agent Master',
-        icon: Icons.person_add_alt_1,
-        onTap: () => _go(AgentMasterPage(branchCode: _branch)),
-      ),
-      _DashItem(
-        title: 'Commission',
-        icon: Icons.account_balance_wallet,
-        onTap: () =>
-            _go(CommissionPage(branchCode: _branch, branchName: _branch)),
-      ),
-      _DashItem(
-        title: 'Agent Comm. Report',
-        icon: Icons.assessment,
-        onTap: () => _go(
-          AgentCommissionReportPage(branchCode: _branch, branchName: _branch),
+    ];
+
+    // MAY/NAT do not use agent/commission.
+    final commissionEnabled = _branch != 'MAY' && _branch != 'NAT';
+    if (commissionEnabled) {
+      items.addAll([
+        _DashItem(
+          title: 'Agents',
+          icon: Icons.groups,
+          onTap: () => _go(AgentsPage(branchCode: _branch)),
         ),
-      ),
+        _DashItem(
+          title: 'Agent Master',
+          icon: Icons.person_add_alt_1,
+          onTap: () => _go(AgentMasterPage(branchCode: _branch)),
+        ),
+        _DashItem(
+          title: 'Commission',
+          icon: Icons.account_balance_wallet,
+          onTap: () =>
+              _go(CommissionPage(branchCode: _branch, branchName: _branch)),
+        ),
+        _DashItem(
+          title: 'Agent Comm. Report',
+          icon: Icons.assessment,
+          onTap: () => _go(
+            AgentCommissionReportPage(
+              branchCode: _branch,
+              branchName: _branch,
+            ),
+          ),
+        ),
+      ]);
+    }
+
+    // Main JPR gets management access to PHOTO + VR.
+    if (_branch == 'JPR') {
+      items.addAll([
+        _DashItem(
+          title: 'Photo',
+          icon: Icons.photo_camera,
+          onTap: () => _go(
+            AddonModulePage(
+              username: widget.username,
+              branchCode: 'JPR',
+              department: 'PHOTO',
+              management: true,
+            ),
+          ),
+        ),
+        _DashItem(
+          title: 'VR',
+          icon: Icons.vrpano,
+          onTap: () => _go(
+            AddonModulePage(
+              username: widget.username,
+              branchCode: 'JPR',
+              department: 'VR',
+              management: true,
+            ),
+          ),
+        ),
+      ]);
+    }
+
+    items.add(
       _DashItem(
         title: 'Settings',
         icon: Icons.settings,
         onTap: () =>
             _go(SettingsPage(username: widget.username, branch: _branch)),
       ),
-    ];
+    );
+
+    return items;
   }
 
   @override

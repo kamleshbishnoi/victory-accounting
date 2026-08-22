@@ -57,6 +57,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
   final List<String> _outCategories = const [
     'Expense',
     'Commission Paid',
+    'Photo Commission Paid',
+    'VR Commission Paid',
     'Salary Advance',
     'Salary Paid',
     'Staff Payment',

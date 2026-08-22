@@ -754,6 +754,7 @@ class _TicketCreatePageState extends State<TicketCreatePage> {
               DropdownMenuItem(value: 'Cash', child: Text('Cash')),
               DropdownMenuItem(value: 'UPI', child: Text('UPI')),
               DropdownMenuItem(value: 'Card', child: Text('Card')),
+              DropdownMenuItem(value: 'Pending', child: Text('Pending')),
             ],
             onChanged: _saving
                 ? null

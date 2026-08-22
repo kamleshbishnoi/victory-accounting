@@ -282,6 +282,70 @@ class _TicketReportPageState extends State<TicketReportPage> {
     }
   }
 
+  Future<void> _editPayment(Map<String, dynamic> ticket) async {
+    final ticketNo = (ticket['ticket_no'] ?? '').toString();
+    String selected = (ticket['payment_mode'] ?? ticket['payment_method'] ?? 'Pending')
+        .toString();
+
+    const allowed = ['Cash', 'UPI', 'Card', 'Pending'];
+    if (!allowed.contains(selected)) selected = 'Pending';
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setD) => AlertDialog(
+          title: Text('Payment Mode • $ticketNo'),
+          content: DropdownButtonFormField<String>(
+            value: selected,
+            decoration: const InputDecoration(
+              labelText: 'Payment Mode',
+              border: OutlineInputBorder(),
+            ),
+            items: allowed
+                .map(
+                  (e) => DropdownMenuItem<String>(
+                    value: e,
+                    child: Text(e),
+                  ),
+                )
+                .toList(),
+            onChanged: (v) {
+              if (v != null) setD(() => selected = v);
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, selected),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result == null) return;
+
+    try {
+      await supabase
+          .from('tickets')
+          .update({
+            'payment_mode': result,
+            'payment_method': result,
+          })
+          .eq('ticket_no', ticketNo)
+          .eq('branch_code', branchCode!);
+
+      await _load();
+      _toast('Payment updated: $ticketNo → $result');
+    } catch (e) {
+      _toast('Payment update error: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final title = (branchCode == null) ? widget.branch : '$branchCode';
@@ -304,8 +368,6 @@ class _TicketReportPageState extends State<TicketReportPage> {
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
-          : !_isAdmin
-          ? const Center(child: Text('Admin only'))
           : branchId == null
           ? const Center(child: Text('Branch not configured'))
           : Column(
@@ -356,6 +418,10 @@ class _TicketReportPageState extends State<TicketReportPage> {
                                   DropdownMenuItem(
                                     value: 'Card',
                                     child: Text('Card'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'Pending',
+                                    child: Text('Pending'),
                                   ),
                                 ],
                                 onChanged: (v) async {
@@ -427,6 +493,12 @@ class _TicketReportPageState extends State<TicketReportPage> {
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  OutlinedButton.icon(
+                                    onPressed: () => _editPayment(t),
+                                    icon: const Icon(Icons.payments_outlined, size: 18),
+                                    label: const Text('Edit Payment'),
                                   ),
                                 ],
                               ),

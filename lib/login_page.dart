@@ -42,7 +42,7 @@ class _LoginPageState extends State<LoginPage> {
 
       final row = await supabase
           .from('staff_users')
-          .select('username, password, role, branch_code')
+          .select('username, password, role, branch_code, access_type')
           .ilike('username', username)
           .maybeSingle();
 

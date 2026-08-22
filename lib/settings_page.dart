@@ -37,6 +37,10 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final branchCode = branch.trim().toUpperCase();
+    final isAdmin = branchCode == 'ALL';
+    final commissionEnabled = branchCode != 'NAT' && branchCode != 'MAY';
+
     return Scaffold(
       appBar: AppBar(title: Text('Settings • $branch')),
       body: Padding(
@@ -60,7 +64,8 @@ class SettingsPage extends StatelessWidget {
                 padding: const EdgeInsets.all(12),
                 child: Column(
                   children: [
-                    ListTile(
+                    if (isAdmin)
+                      ListTile(
                       leading: const Icon(Icons.delete_outline),
                       title: const Text('Clear Transactions'),
                       subtitle: const Text(
@@ -77,8 +82,9 @@ class SettingsPage extends StatelessWidget {
                         await _toast(context, 'Transactions cleared');
                       },
                     ),
-                    const Divider(height: 1),
-                    ListTile(
+                    if (isAdmin) const Divider(height: 1),
+                    if (isAdmin)
+                      ListTile(
                       leading: const Icon(Icons.delete_outline),
                       title: const Text('Clear Staff'),
                       subtitle: const Text('Delete all staff for this branch'),
@@ -93,8 +99,9 @@ class SettingsPage extends StatelessWidget {
                         await _toast(context, 'Staff cleared');
                       },
                     ),
-                    const Divider(height: 1),
-                    ListTile(
+                    if (isAdmin && commissionEnabled) const Divider(height: 1),
+                    if (commissionEnabled)
+                      ListTile(
                       leading: const Icon(Icons.percent),
                       title: const Text('Commission Settings'),
                       subtitle: const Text(
@@ -112,7 +119,8 @@ class SettingsPage extends StatelessWidget {
                         );
                       },
                     ),
-                    ListTile(
+                    if (isAdmin)
+                      ListTile(
                       leading: const Icon(Icons.delete_outline),
                       title: const Text('Clear Attendance'),
                       subtitle: const Text(
@@ -129,8 +137,9 @@ class SettingsPage extends StatelessWidget {
                         await _toast(context, 'Attendance cleared');
                       },
                     ),
-                    const Divider(height: 1),
-                    ListTile(
+                    if (isAdmin) const Divider(height: 1),
+                    if (isAdmin)
+                      ListTile(
                       leading: const Icon(Icons.delete_forever),
                       title: const Text('Clear ALL data'),
                       subtitle: const Text('Transactions + Staff + Attendance'),
